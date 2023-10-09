@@ -71,12 +71,19 @@ class _Chart extends k8s.Chart {
       }
     );
 
+    let isPublic = props.public ?? false;
+    let var serviceType: cdk8s.ServiceType? = nil;
+
+    if isPublic {
+      serviceType = cdk8s.ServiceType.NODE_PORT;
+    }
+
     let service = deployment.exposeViaService(
       name: name,
-      serviceType: cdk8s.ServiceType.NODE_PORT,
+      serviceType: serviceType,
     );
 
-    if (props.public ?? false) {
+    if isPublic {
       new cdk8s.Ingress(
         metadata: {
           name: name,

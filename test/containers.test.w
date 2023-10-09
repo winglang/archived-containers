@@ -7,7 +7,7 @@ let hello = new containers.Workload(
   image: "paulbouwer/hello-kubernetes:1",
   port: 8080,
   readiness: "/",
-  replicas: 4,
+  replicas: 3,
   env: {
     "MESSAGE" => message,
   },
