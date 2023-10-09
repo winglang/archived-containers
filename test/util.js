@@ -1,4 +1,5 @@
 const child_process = require("child_process");
+const tfaws = require("@winglang/sdk/lib/target-tf-aws");
 
 exports.shell = async function (command, args, cwd) {
   return new Promise((resolve, reject) => {
@@ -16,3 +17,11 @@ exports.shell = async function (command, args, cwd) {
 exports.entrypointDir = function (scope) {
   return scope.node.root.entrypointDir;
 };
+
+// exports.awsVpc = function(scope) {
+//   return tfaws.App.of(scope).vpc;
+// }
+
+// exports.toSubnet = function(scope) {
+//   return scope;
+// }
