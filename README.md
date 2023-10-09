@@ -43,6 +43,7 @@ cluster.
 See [Captain's Log](https://winglang.slack.com/archives/C047QFSUL5R/p1696868156845019) in the [Wing Slack](https://t.winglang.io).
 
 - [x] EKS as a singleton
+- [ ] Deploy multiple workloads (maybe guestbook?)
 - [ ] Publish the library
 - [ ] Implement `start()` and `stop()` and `url()`.
 - [ ] Add support for local Dockerfiles (currently only images from Docker Hub are supported), this
