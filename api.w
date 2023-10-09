@@ -14,6 +14,7 @@ struct ContainerOpts {
   port: num?;
   env: Map<str>?;
   readiness: str?; // http get
+  replicas: num?;
 }
 
 struct WorkloadProps extends ContainerOpts {

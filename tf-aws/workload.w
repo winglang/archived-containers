@@ -2,9 +2,37 @@ bring "../api.w" as api;
 bring "./eks.w" as eks;
 bring "cdk8s-plus-27" as cdk8s;
 bring "cdk8s" as k8s;
+bring "cdktf" as cdktf3;
+bring "./util.w" as util;
+
+class Workload impl api.IWorkload {
+  init(props: api.WorkloadProps) {
+    let name = "${this.node.id.replace(".", "-")}-${this.node.addr.substring(0, 6)}";
+    let cluster = eks.EksCluster.getOrCreate(this);
+    let chart = new _Chart(name, props);
+    let helmDir = util.toHelmChart(chart);
+    
+    cluster.addChart(
+      name: name,
+      chart: helmDir,
+    );
+  }
+
+  pub inflight start() {
+    throw "Not implemented yet";
+  }
+
+  pub inflight stop() {
+    throw "Not implemented yet";
+  }
+
+  pub inflight url(): str? {
+    throw "Not implemented yet";
+  }
+}
 
 class _Chart extends k8s.Chart {
-  init(props: api.WorkloadProps) {
+  init(name: str, props: api.WorkloadProps) {
     let env = props.env ?? {};
     let envVariables = MutMap<cdk8s.EnvValue>{};
 
@@ -27,9 +55,10 @@ class _Chart extends k8s.Chart {
     }
 
     let deployment = new cdk8s.Deployment(
+      replicas: props.replicas,
       metadata: {
-        name: "deployment-${this.node.addr}"
-      }
+        name: name
+      },
     );
 
     deployment.addContainer(
@@ -43,13 +72,13 @@ class _Chart extends k8s.Chart {
     );
 
     let service = deployment.exposeViaService(
-      name: "service-${this.node.addr}",
+      name: name,
       serviceType: cdk8s.ServiceType.NODE_PORT,
     );
 
     let ingress = new cdk8s.Ingress(
       metadata: {
-        name: "ingress-${this.node.addr}",
+        name: name,
         annotations: {
           "kubernetes.io/ingress.class": "alb",
           "alb.ingress.kubernetes.io/scheme": "internet-facing",
@@ -57,39 +86,5 @@ class _Chart extends k8s.Chart {
       },
       defaultBackend: cdk8s.IngressBackend.fromService(service),
     );
-
-    // ingress.addRule("/", );
   }
-}
-
-class Workload impl api.IWorkload {
-  init(props: api.WorkloadProps) {
-    let cluster = new eks.EksCluster();
-
-    let chart = new _Chart(props);
-    let helmDir = Util.toHelmChart(chart);
-
-    // log(helmDir);
-    
-    cluster.addChart(
-      name: "app-${this.node.addr}",
-      chart: helmDir,
-    );
-  }
-
-  pub inflight start() {
-    throw "Not implemented yet";
-  }
-
-  pub inflight stop() {
-    throw "Not implemented yet";
-  }
-
-  pub inflight url(): str? {
-    throw "Not implemented yet";
-  }
-}
-
-class Util {
-  extern "./util.js" pub static toHelmChart(chart: k8s.Chart): str;
 }

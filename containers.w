@@ -10,9 +10,9 @@ class Workload impl api.IWorkload {
     let target = util.env("WING_TARGET");
 
     if target == "sim" {
-      this.inner = new sim.Workload(props);
+      this.inner = new sim.Workload(props) as this.node.id;
     } elif target == "tf-aws" {
-      this.inner = new aws.Workload(props);
+      this.inner = new aws.Workload(props) as this.node.id;
     } else {
       throw "unsupported target ${target}";
     }

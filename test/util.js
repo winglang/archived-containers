@@ -3,7 +3,7 @@ const cdk8s = require('cdk8s');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
-const tfaws = require('@winglang/sdk/lib/target-tf-aws');
+const cdktf = require('cdktf');
 
 exports.shell = async function (command, args, cwd) {
   return new Promise((resolve, reject) => {
@@ -24,13 +24,14 @@ exports.entrypointDir = function (scope) {
 
 exports.toHelmChart = function(chart) {
   const app = cdk8s.App.of(chart);
+
   app.resolvers = [new cdk8s.LazyResolver(), new cdk8s.ImplicitTokenResolver(), new cdk8s.NumberStringUnionResolver()];
   const docs = cdk8s.App._synthChart(chart);
+  const yaml = cdk8s.Yaml.stringify(...docs);
 
   const workdir = fs.mkdtempSync(path.join(os.tmpdir(), "helm."));
-  const templates = fs.mkdirSync(path.join(workdir, "templates"), {recursive: true});
-
-  const yaml = cdk8s.Yaml.stringify(...docs);
+  const templates = path.join(workdir, "templates");
+  fs.mkdirSync(templates, {recursive: true});
   fs.writeFileSync(path.join(templates, "all.yaml"), yaml);
 
   const manifest = {
@@ -47,14 +48,5 @@ exports.toHelmChart = function(chart) {
   return workdir;
 };
 
-exports.awsRegion = function(scope) {
-  return tfaws.App.of(scope).region;
-}
-
-// exports.awsVpc = function(scope) {
-//   return tfaws.App.of(scope).vpc;
-// }
-
-// exports.toSubnet = function(scope) {
-//   return scope;
-// }
+exports.toEksCluster = x => x;
+exports.toResource = x => x;
