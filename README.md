@@ -19,10 +19,11 @@ new containers.Workload(
   image: "paulbouwer/hello-kubernetes:1",
   port: 8080,
   readiness: "/",
+  replicas: 4,
   env: {
     "MESSAGE" => message,
   }
-);
+) as "hello";
 ```
 
 The `Workload` resource represents a containerized workload.
