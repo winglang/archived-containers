@@ -22,7 +22,7 @@ class _Chart extends k8s.Chart {
       if let port = props.port {
         readiness = cdk8s.Probe.fromHttpGet(x, port: port);
       } else {
-        throw "cannot implement readiness probe without a `port`";
+        throw "Cannot setup readiness probe without a `port`";
       }
     }
 
