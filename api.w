@@ -15,6 +15,7 @@ struct ContainerOpts {
   env: Map<str>?;
   readiness: str?; // http get
   replicas: num?;
+  public: bool?; // whether the workload should have a public url (default: false)
 }
 
 struct WorkloadProps extends ContainerOpts {

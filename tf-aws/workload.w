@@ -76,15 +76,17 @@ class _Chart extends k8s.Chart {
       serviceType: cdk8s.ServiceType.NODE_PORT,
     );
 
-    let ingress = new cdk8s.Ingress(
-      metadata: {
-        name: name,
-        annotations: {
-          "kubernetes.io/ingress.class": "alb",
-          "alb.ingress.kubernetes.io/scheme": "internet-facing",
-        }
-      },
-      defaultBackend: cdk8s.IngressBackend.fromService(service),
-    );
+    if (props.public ?? false) {
+      new cdk8s.Ingress(
+        metadata: {
+          name: name,
+          annotations: {
+            "kubernetes.io/ingress.class": "alb",
+            "alb.ingress.kubernetes.io/scheme": "internet-facing",
+          }
+        },
+        defaultBackend: cdk8s.IngressBackend.fromService(service),
+      );
+    }
   }
 }

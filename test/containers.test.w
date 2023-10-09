@@ -10,7 +10,8 @@ let hello = new containers.Workload(
   replicas: 4,
   env: {
     "MESSAGE" => message,
-  }
+  },
+  public: true,
 ) as "hello";
 
 // new containers.Workload(
@@ -21,10 +22,11 @@ let hello = new containers.Workload(
 //   port: 80,
 // ) as "guestbook";
 
-// new containers.Workload(
-//   image: "registry.k8s.io/redis:e2e",
-//   port: 6379,
-// ) as "redis";
+new containers.Workload(
+  image: "redis",
+  port: 6379,
+  replicas: 1,
+) as "redis1";
 
 let getBody = inflight (): str? => {
   if let url = hello.url() {
