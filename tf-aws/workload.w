@@ -53,10 +53,6 @@ class _Chart extends k8s.Chart {
         annotations: {
           "kubernetes.io/ingress.class": "alb",
           "alb.ingress.kubernetes.io/scheme": "internet-facing",
-          // "alb.ingress.kubernetes.io/target-type": "instance",
-          // "alb.ingress.kubernetes.io/load-balancer-name": "",
-          // "alb.ingress.kubernetes.io/backend-protocol": "HTTP",
-          // "alb.ingress.kubernetes.io/listen-ports": "[{\"HTTP\": 80}]",
         }
       },
       defaultBackend: cdk8s.IngressBackend.fromService(service),
