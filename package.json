@@ -1,11 +1,17 @@
 {
-  "name": "containers",
+  "name": "wing-containers",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "wing test test/containers.test.w"
   },
-  "author": "",
-  "license": "ISC"
+  "author": {
+    "email": "eladb@wing.cloud",
+    "name": "Elad Ben-Israel"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "winglang": "^0.36.1"
+  }
 }
