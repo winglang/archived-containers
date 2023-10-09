@@ -12,6 +12,8 @@ npm i wing-containers
 
 ## Bring it
 
+The `Workload` resource represents a containerized workload.
+
 ```js
 bring "wing-containers" as containers;
 
@@ -25,8 +27,6 @@ new containers.Workload(
   }
 ) as "hello";
 ```
-
-The `Workload` resource represents a containerized workload.
 
 ## Implementations
 
