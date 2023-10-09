@@ -20,7 +20,6 @@ let getBody = inflight (): str? => {
   return nil;
 };
 
-
 test "container started automatically and port exposed" {
   let body = getBody();
   assert(body?.contains(message) ?? false);
