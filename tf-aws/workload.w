@@ -28,7 +28,7 @@ class _Chart extends k8s.Chart {
 
     let deployment = new cdk8s.Deployment(
       metadata: {
-        name: "my-deployment-${this.node.addr}"
+        name: "deployment-${this.node.addr}"
       }
     );
 
@@ -43,8 +43,26 @@ class _Chart extends k8s.Chart {
     );
 
     let service = deployment.exposeViaService(
-      name: "my-service-${this.node.addr}",
+      name: "service-${this.node.addr}",
+      serviceType: cdk8s.ServiceType.NODE_PORT,
     );
+
+    let ingress = new cdk8s.Ingress(
+      metadata: {
+        name: "ingress-${this.node.addr}",
+        annotations: {
+          "kubernetes.io/ingress.class": "alb",
+          "alb.ingress.kubernetes.io/scheme": "internet-facing",
+          // "alb.ingress.kubernetes.io/target-type": "instance",
+          // "alb.ingress.kubernetes.io/load-balancer-name": "",
+          // "alb.ingress.kubernetes.io/backend-protocol": "HTTP",
+          // "alb.ingress.kubernetes.io/listen-ports": "[{\"HTTP\": 80}]",
+        }
+      },
+      defaultBackend: cdk8s.IngressBackend.fromService(service),
+    );
+
+    // ingress.addRule("/", );
   }
 }
 
@@ -58,7 +76,7 @@ class Workload impl api.IWorkload {
     // log(helmDir);
     
     cluster.addChart(
-      name: "my-app",
+      name: "app-${this.node.addr}",
       chart: helmDir,
     );
   }

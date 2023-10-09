@@ -14,6 +14,7 @@
   "dependencies": {
     "@cdktf/provider-aws": "^17.0.9",
     "@cdktf/provider-helm": "^8.0.1",
+    "@cdktf/provider-kubernetes": "^9.0.0",
     "cdk8s-plus-27": "^2.7.33",
     "cdktf": "^0.18.2",
     "winglang": "^0.36.1"

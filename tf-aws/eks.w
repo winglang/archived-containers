@@ -1,14 +1,16 @@
-bring "cdktf" as cdktf;
-bring "@cdktf/provider-aws" as tfaws;
 bring aws;
 bring cloud;
-bring "./vpc.w" as v;
+bring "cdktf" as cdktf;
+bring "@cdktf/provider-aws" as tfaws;
 bring "@cdktf/provider-helm" as helm4;
+bring "@cdktf/provider-kubernetes" as kubernetes;
+bring "./vpc.w" as v;
 
 class EksCluster {
   pub endpoint: str;
   pub certificate: str;
   pub name: str;
+  pub oidcProviderArn: str;
 
   init() {
     let clusterName = "wing-eks-${this.node.addr.substring(0, 6)}";
@@ -87,26 +89,77 @@ class EksCluster {
     this.name = clusterName;
     this.certificate = eks.get("cluster_certificate_authority_data");
     this.endpoint = eks.get("cluster_endpoint");
+    this.oidcProviderArn = eks.get("oidc_provider_arn");
 
-    new helm4.provider.HelmProvider(
-      kubernetes: {
-        host: this.endpoint,
-        clusterCaCertificate: cdktf.Fn.base64decode(this.certificate),
-        exec: {
-          apiVersion: "client.authentication.k8s.io/v1beta1",
-          args: ["eks", "get-token", "--cluster-name", this.name],
-          command: "aws"
+    let k8sconfig = {
+      host: this.endpoint,
+      clusterCaCertificate: cdktf.Fn.base64decode(this.certificate),
+      exec: {
+        apiVersion: "client.authentication.k8s.io/v1beta1",
+        args: ["eks", "get-token", "--cluster-name", this.name],
+        command: "aws",
+      }
+    };
+
+    new helm4.provider.HelmProvider(kubernetes: k8sconfig);
+    new kubernetes.provider.KubernetesProvider(k8sconfig);
+
+    let serviceAccountName = "aws-load-balancer-controller";
+    let lbRole = new cdktf.TerraformHclModule(
+      source: "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks",
+      variables: {
+        role_name: "eks-lb-role-${this.node.addr}",
+        attach_load_balancer_controller_policy: true,
+        oidc_providers: {
+          main: {
+            provider_arn: this.oidcProviderArn,
+            namespace_service_accounts: ["kube-system:${serviceAccountName}"],
+          }
         }
+      }
+    ) as "lb_role";
+
+    let serviceAccount = new kubernetes.serviceAccount.ServiceAccount(
+      metadata: {
+        name: serviceAccountName,
+        namespace: "kube-system",
+        labels: {
+          "app.kubernetes.io/name" => serviceAccountName,
+          "app.kubernetes.io/component"=> "controller"
+        },
+        annotations: {
+          "eks.amazonaws.com/role-arn" => lbRole.get("iam_role_arn"),
+          "eks.amazonaws.com/sts-regional-endpoints" => "true"
+        },
       }
     );
 
     new cdktf.TerraformOutput(value: clusterName);
+
+    this.addChart(
+      name: "aws-load-balancer-controller",
+      repository: "https://aws.github.io/eks-charts",
+      chart: "aws-load-balancer-controller",
+      namespace: "kube-system",
+      dependsOn: [serviceAccount],
+      set: [
+        { name: "region", value: EksUtil.awsRegion(this) },
+        { name: "vpcId", value: vpc.id },
+        { name: "serviceAccount.create", value: "false" },
+        { name: "serviceAccount.name", value: serviceAccountName },
+        { name: "clusterName", value: this.name },
+      ]
+    );
   }
 
   /**
    * Deploys a Helm chart to the cluster.
    */
   pub addChart(release: helm4.release.ReleaseConfig) {
-    new helm4.release.Release(release);
+    new helm4.release.Release(release) as release.name;
   }
+}
+
+class EksUtil {
+  extern "./util.js" pub static awsRegion(scope: std.IResource): str;
 }

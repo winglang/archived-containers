@@ -3,6 +3,7 @@ const cdk8s = require('cdk8s');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
+const tfaws = require('@winglang/sdk/lib/target-tf-aws');
 
 exports.shell = async function (command, args, cwd) {
   return new Promise((resolve, reject) => {
@@ -46,7 +47,9 @@ exports.toHelmChart = function(chart) {
   return workdir;
 };
 
-
+exports.awsRegion = function(scope) {
+  return tfaws.App.of(scope).region;
+}
 
 // exports.awsVpc = function(scope) {
 //   return tfaws.App.of(scope).vpc;
