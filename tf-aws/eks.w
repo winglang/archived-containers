@@ -3,11 +3,15 @@ bring "@cdktf/provider-aws" as tfaws;
 bring aws;
 bring cloud;
 bring "./vpc.w" as v;
+bring "@cdktf/provider-helm" as helm4;
 
 class EksCluster {
+  pub endpoint: str;
+  pub certificate: str;
+  pub name: str;
+
   init() {
     let clusterName = "wing-eks-${this.node.addr.substring(0, 6)}";
-
 
     let privateSubnetTags = MutMap<str>{};
     privateSubnetTags.set("kubernetes.io/role/internal-elb", "1");
@@ -31,7 +35,8 @@ class EksCluster {
         vpc_id: vpc.id,
         subnet_ids: vpc.privateSubnets,
         cluster_endpoint_public_access: true,
-
+        // create_aws_auth_configmap: true,
+        // manage_aws_auth_configmap: true,
         eks_managed_node_group_defaults: {
           ami_type: "AL2_x86_64"
         },
@@ -77,6 +82,31 @@ class EksCluster {
         "eks_addon" => "ebs-csi",
         "terraform" => "true",
       },
-    );    
-  } 
+    );
+
+    this.name = clusterName;
+    this.certificate = eks.get("cluster_certificate_authority_data");
+    this.endpoint = eks.get("cluster_endpoint");
+
+    new helm4.provider.HelmProvider(
+      kubernetes: {
+        host: this.endpoint,
+        clusterCaCertificate: cdktf.Fn.base64decode(this.certificate),
+        exec: {
+          apiVersion: "client.authentication.k8s.io/v1beta1",
+          args: ["eks", "get-token", "--cluster-name", this.name],
+          command: "aws"
+        }
+      }
+    );
+
+    new cdktf.TerraformOutput(value: clusterName);
+  }
+
+  /**
+   * Deploys a Helm chart to the cluster.
+   */
+  pub addChart(release: helm4.release.ReleaseConfig) {
+    new helm4.release.Release(release);
+  }
 }
