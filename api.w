@@ -1,9 +1,11 @@
 interface IWorkload {
-  /** starts the workload */
+  /** starts the container */
   inflight start(): void;
 
-  /** stops containers */
+  /** stops the container */
   inflight stop(): void;
+
+  /** if `port` is specified, this includes the external url of the container */
   inflight url(): str?;
 }
 
