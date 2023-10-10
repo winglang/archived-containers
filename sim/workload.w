@@ -20,7 +20,7 @@ class Workload impl api.IWorkload {
     new cloud.Service(inflight () => {
       this.start();
       return () => {
-        this.start();
+        this.stop();
       };
     });
   }
