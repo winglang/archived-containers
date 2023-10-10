@@ -16,6 +16,7 @@ struct ContainerOpts {
   readiness: str?; // http get
   replicas: num?;
   public: bool?; // whether the workload should have a public url (default: false)
+  args: Array<str>?; // arguments to pass to entrypoint
 }
 
 struct WorkloadProps extends ContainerOpts {

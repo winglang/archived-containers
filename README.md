@@ -44,17 +44,19 @@ cluster.
 See [Captain's Log](https://winglang.slack.com/archives/C047QFSUL5R/p1696868156845019) in the [Wing Slack](https://t.winglang.io).
 
 - [x] EKS as a singleton
+- [ ] Add support for local Dockerfiles (currently only images from Docker Hub are supported), this
+      includes publishing into an ECR.
+- [ ] Use a `cloud.Redis` database
+- [ ] Implement `cloud.Service` using containers.
 - [ ] Deploy multiple workloads (maybe guestbook?)
 - [ ] Publish the library
 - [ ] Implement `start()` and `stop()` and `url()`.
-- [ ] Add support for local Dockerfiles (currently only images from Docker Hub are supported), this
-      includes publishing into an ECR.
-- [ ] Add support for sidecar containers
+- [ ] Sidecar containers
 - [ ] Domains
 - [ ] SSL
 - [ ] What happens if I deploy more than one app into the cluster? Add support for ingress routes
       (currently all routes go to the container).
-- [ ] Nodes - what should we do there? Use Fargate profiles in EKS instead of managed node groups?
+- [x] Nodes - what should we do there? Use Fargate profiles in EKS instead of managed node groups?
 - [ ] Open bugs
 - [ ] Allow referencing an existing EKS cluster.
 

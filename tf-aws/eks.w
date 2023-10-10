@@ -6,20 +6,66 @@ bring "@cdktf/provider-aws" as tfaws;
 bring "@cdktf/provider-helm" as helm4;
 bring "@cdktf/provider-kubernetes" as kubernetes;
 bring "./vpc.w" as v;
-bring "./util.w" as util2;
+bring "./values.w" as values;
 
-class EksCluster {
-  /** singleton */
-  pub static getOrCreate(scope: std.IResource): EksCluster {
-    let stack = cdktf.TerraformStack.of(scope);
-    let uid = "WingEksCluster";
-    return EksCluster.toEksCluster(stack.node.tryFindChild(uid)) ?? new EksCluster() as uid in EksCluster.toResource(stack);
+struct ClusterAttributes {
+  name: str;
+  certificate: str;
+  endpoint: str;
+}
+
+interface ICluster extends std.IResource {
+  attributes(): ClusterAttributes;
+}
+
+class ClusterRef impl ICluster {
+  _attributes: ClusterAttributes;
+
+  init(attributes: ClusterAttributes) {
+    this._attributes = attributes;
   }
 
-  pub endpoint: str;
-  pub certificate: str;
-  pub name: str;
-  pub oidcProviderArn: str;
+  pub attributes(): ClusterAttributes {
+    return this._attributes;
+  }
+}
+
+class HelmChart {
+  init(cluster: ICluster, release: helm4.release.ReleaseConfig) {
+    let stack = cdktf.TerraformStack.of(this);
+    let singletonKey = "WingHelmProvider";
+    let attributes = cluster.attributes();
+    let existing = stack.node.tryFindChild(singletonKey);
+    if !existing? {
+      new helm4.provider.HelmProvider(kubernetes: {
+        host: attributes.endpoint,
+        clusterCaCertificate: cdktf.Fn.base64decode(attributes.certificate),
+        exec: {
+          apiVersion: "client.authentication.k8s.io/v1beta1",
+          args: ["eks", "get-token", "--cluster-name", attributes.name],
+          command: "aws",
+        }
+      }) as singletonKey in stack;
+    }
+
+    new helm4.release.Release(release) as release.name;
+  }
+}
+
+class Cluster impl ICluster {
+
+  /** singleton */
+  pub static getOrCreate(scope: std.IResource): ICluster {
+    // values.get("foo");
+
+    let stack = cdktf.TerraformStack.of(scope);
+    let uid = "WingEksCluster";
+    let existing = EksUtil.toEksCluster(stack.node.tryFindChild(uid));
+    return existing ?? new Cluster() as uid in stack;
+  }
+
+  _attributes: ClusterAttributes;
+  _oidcProviderArn: str;
 
   vpc: v.Vpc;
 
@@ -39,7 +85,7 @@ class EksCluster {
       publicSubnetTags: publicSubnetTags.copy(),
     );
 
-    let eks = new cdktf.TerraformHclModule(
+    let cluster = new cdktf.TerraformHclModule(
       source: "terraform-aws-modules/eks/aws",
       version: "19.17.1",
       variables: {
@@ -52,21 +98,37 @@ class EksCluster {
           ami_type: "AL2_x86_64"
         },
         eks_managed_node_groups: {
-          small: {
-            name: "node-group-1",
+          system: {
+            name: "system",
             instance_types: ["t3.small"],
             min_size: 1,
             max_size: 10,
-            desired_size: 5
+            desired_size: 10
           },
+        },
+        fargate_profiles: {
+          default: {
+            name: "default",
+            selectors: [
+              { namespace: "default" }
+            ]
+          }
+        },
+        cluster_addons: {
+          coredns: {
+            most_recent: true,
+          }
         }
       }
     ) as "eks";
 
-    this.name = clusterName;
-    this.certificate = eks.get("cluster_certificate_authority_data");
-    this.endpoint = eks.get("cluster_endpoint");
-    this.oidcProviderArn = eks.get("oidc_provider_arn");
+    this._attributes = {
+      name: clusterName,
+      certificate:  cluster.get("cluster_certificate_authority_data"),
+      endpoint: cluster.get("cluster_endpoint"),
+    };
+
+    this._oidcProviderArn = cluster.get("oidc_provider_arn");
 
     let ebsCsiPolicy = new tfaws.dataAwsIamPolicy.DataAwsIamPolicy(arn: "arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy");
 
@@ -76,7 +138,7 @@ class EksCluster {
       variables: {
         create_role: true,
         role_name: "AmazonEKSTFEBSCSIRole-${clusterName}",
-        provider_url: eks.get("oidc_provider"),
+        provider_url: cluster.get("oidc_provider"),
         role_policy_arns: [ebsCsiPolicy.arn],
         oidc_fully_qualified_subjects: ["system:serviceaccount:kube-system:ebs-csi-controller-sa"]
       }
@@ -93,33 +155,28 @@ class EksCluster {
       },
     );
 
-
-    // setup the helm and k8s terraform providers
-    let k8sconfig = {
-      host: this.endpoint,
-      clusterCaCertificate: cdktf.Fn.base64decode(this.certificate),
+    // setup the "kubernetes" terraform provider
+    new kubernetes.provider.KubernetesProvider(
+      host: this._attributes.endpoint,
+      clusterCaCertificate: cdktf.Fn.base64decode(this._attributes.certificate),
       exec: {
         apiVersion: "client.authentication.k8s.io/v1beta1",
-        args: ["eks", "get-token", "--cluster-name", this.name],
+        args: ["eks", "get-token", "--cluster-name", this._attributes.name],
         command: "aws",
       }
-    };
-
-    new helm4.provider.HelmProvider(kubernetes: k8sconfig);
-    new kubernetes.provider.KubernetesProvider(k8sconfig);
+    );
 
     // output the cluster name
-    new cdktf.TerraformOutput(value: clusterName);
+    new cdktf.TerraformOutput(value: this._attributes.name, description: "eks.cluster_name") as "eks.cluster_name";
+    new cdktf.TerraformOutput(value: this._attributes.certificate, description: "eks.certificate") as "eks.certificate";
+    new cdktf.TerraformOutput(value: this._attributes.endpoint, description: "eks.endpoint") as "eks.endpoint";
 
     // install the LB controller to support ingress
     this.addLoadBalancerController();
   }
 
-  /**
-   * Deploys a Helm chart to the cluster.
-   */
-  pub addChart(release: helm4.release.ReleaseConfig) {
-    new helm4.release.Release(release) as release.name;
+  pub attributes(): ClusterAttributes { 
+    return this._attributes;
   }
 
   addLoadBalancerController() {
@@ -132,7 +189,7 @@ class EksCluster {
         attach_load_balancer_controller_policy: true,
         oidc_providers: {
           main: {
-            provider_arn: this.oidcProviderArn,
+            provider_arn: this._oidcProviderArn,
             namespace_service_accounts: ["kube-system:${serviceAccountName}"],
           }
         }
@@ -154,7 +211,7 @@ class EksCluster {
       }
     );
 
-    this.addChart(
+    new HelmChart(this, 
       name: "aws-load-balancer-controller",
       repository: "https://aws.github.io/eks-charts",
       chart: "aws-load-balancer-controller",
@@ -165,11 +222,12 @@ class EksCluster {
         { name: "vpcId", value: this.vpc.id },
         { name: "serviceAccount.create", value: "false" },
         { name: "serviceAccount.name", value: serviceAccountName },
-        { name: "clusterName", value: this.name },
+        { name: "clusterName", value: this._attributes.name },
       ]
     );
   }
+}
 
-  extern "./util.js" pub static toEksCluster(scope: c.IConstruct?): EksCluster?;
-  extern "./util.js" pub static toResource(scope: c.IConstruct): EksCluster;
+class EksUtil {
+  extern "./util.js" pub static toEksCluster(scope: c.IConstruct?): ICluster?;
 }

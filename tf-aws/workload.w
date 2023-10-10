@@ -3,16 +3,16 @@ bring "./eks.w" as eks;
 bring "cdk8s-plus-27" as cdk8s;
 bring "cdk8s" as k8s;
 bring "cdktf" as cdktf3;
-bring "./util.w" as util;
 
 class Workload impl api.IWorkload {
   init(props: api.WorkloadProps) {
     let name = "${this.node.id.replace(".", "-")}-${this.node.addr.substring(0, 6)}";
-    let cluster = eks.EksCluster.getOrCreate(this);
+    let cluster = eks.Cluster.getOrCreate(this);
     let chart = new _Chart(name, props);
-    let helmDir = util.toHelmChart(chart);
-    
-    cluster.addChart(
+    let helmDir = chart.toHelm();
+
+    new eks.HelmChart(
+      cluster,
       name: name,
       chart: helmDir,
     );
@@ -66,6 +66,7 @@ class _Chart extends k8s.Chart {
       envVariables: envVariables.copy(),
       ports: ports.copy(),
       readiness: readiness,
+      args: props.args,
       securityContext: {
         ensureNonRoot: false,
       }
@@ -90,10 +91,20 @@ class _Chart extends k8s.Chart {
           annotations: {
             "kubernetes.io/ingress.class": "alb",
             "alb.ingress.kubernetes.io/scheme": "internet-facing",
+            "alb.ingress.kubernetes.io/target-type": "ip",
+            "alb.ingress.kubernetes.io/healthcheck-protocol": "HTTP",
+            "alb.ingress.kubernetes.io/healthcheck-port": "traffic-port",
+            "alb.ingress.kubernetes.io/healthcheck-path": "/",
           }
         },
         defaultBackend: cdk8s.IngressBackend.fromService(service),
       );
     }
   }
+
+  pub toHelm(): str {
+    return _Chart.toHelmChart(this);
+  }
+
+  extern "./util.js" pub static toHelmChart(chart: k8s.Chart): str;
 }

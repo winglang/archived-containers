@@ -14,19 +14,18 @@ let hello = new containers.Workload(
   public: true,
 ) as "hello";
 
-// new containers.Workload(
-//   image: "gcr.io/google-samples/gb-frontend:v4",
-//   env: {
-//     "GET_HOSTS_FROM" => "dns",
-//   },
-//   port: 80,
-// ) as "guestbook";
-
 new containers.Workload(
-  image: "redis",
-  port: 6379,
-  replicas: 1,
-) as "redis1";
+  image: "hashicorp/http-echo",
+  port: 5678,
+  public: true,
+  replicas: 20,
+  args: ["-text=hello1234"],
+) as "http-echo";
+
+// new containers.Workload(
+//   image: "./my-app/Dockerfile",
+//   port: 3000
+// );
 
 let getBody = inflight (): str? => {
   if let url = hello.url() {

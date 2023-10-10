@@ -49,4 +49,4 @@ exports.toHelmChart = function(chart) {
 };
 
 exports.toEksCluster = x => x;
-exports.toResource = x => x;
+
