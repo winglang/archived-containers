@@ -43,7 +43,11 @@ class Workload impl api.IWorkload {
     } else {
       Workload.shell("docker", ["pull", opts.image], this.appDir);
     }
+
+    // remove old container
+    Workload.shell("docker", ["rm", "-f", this.containerId]);
     
+    // start the new container
     let args = MutArray<str>[];
     args.push("run");
     args.push("--detach");
@@ -66,14 +70,23 @@ class Workload impl api.IWorkload {
 
     args.push(tag);
 
-    Workload.shell("docker", ["rm", "-f", this.containerId]);
+    if let runArgs = this.props.args {
+      for a in runArgs {
+        args.push(a);
+      }
+    }
+
     Workload.shell("docker", args.copy());
+
     let out = Json.parse(Workload.shell("docker", ["inspect", this.containerId]));
 
     if let port = opts.port {
-      let hostPort = out.getAt(0).get("NetworkSettings").get("Ports").get("${port}/tcp").getAt(0).get("HostPort").asStr();
+      let hostPort = out.tryGetAt(0)?.tryGet("NetworkSettings")?.tryGet("Ports")?.tryGet("${port}/tcp")?.tryGetAt(0)?.tryGet("HostPort")?.tryAsStr();
+      if !hostPort? {
+        throw "Container does not listen to port ${port}";
+      }
+
       let url = "http://localhost:${hostPort}";
-      log(url);
       this.bucket.put(this.urlKey, url);
 
       if let readiness = opts.readiness {
