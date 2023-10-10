@@ -32,6 +32,8 @@ class Workload impl api.IWorkload {
 }
 
 class _Chart extends k8s.Chart {
+  name: str;
+
   init(name: str, props: api.WorkloadProps) {
     let env = props.env ?? {};
     let envVariables = MutMap<cdk8s.EnvValue>{};
@@ -100,6 +102,8 @@ class _Chart extends k8s.Chart {
         defaultBackend: cdk8s.IngressBackend.fromService(service),
       );
     }
+
+    this.name = name;
   }
 
   pub toHelm(): str {

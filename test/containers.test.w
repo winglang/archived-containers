@@ -1,7 +1,7 @@
 bring "../containers.w" as containers;
 bring http;
 
-let message = "hello, wing!";
+let message = "hello, wing change!!";
 
 let hello = new containers.Workload(
   image: "paulbouwer/hello-kubernetes:1",

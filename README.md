@@ -46,10 +46,12 @@ See [Captain's Log](https://winglang.slack.com/archives/C047QFSUL5R/p16968681568
 - [x] EKS as a singleton
 - [ ] Add support for local Dockerfiles (currently only images from Docker Hub are supported), this
       includes publishing into an ECR.
+- [ ] Reference existing EKS repository.
 - [ ] Use a `cloud.Redis` database
 - [ ] Implement `cloud.Service` using containers.
 - [ ] Deploy multiple workloads (maybe guestbook?)
 - [ ] Publish the library
+- [x] Generate helm charts under target directory
 - [ ] Implement `start()` and `stop()` and `url()`.
 - [ ] Sidecar containers
 - [ ] Domains
