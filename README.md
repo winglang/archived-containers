@@ -36,8 +36,22 @@ When executed in the Wing Simulator, the workload is started within a local Dock
 
 ### `tf-aws`
 
-On AWS, an EKS cluster is provisioned and the workload is deployed through Helm into the Kubernetes
-cluster.
+By default an EKS cluster is provisioned and the workload is deployed through Helm into the
+Kubernetes cluster.
+
+To use an existing EKS cluster, the following platform values are required:
+
+* `eks.cluster_name` - the name of the cluster
+* `eks.endpoint` - the url of the kuberenets api endpoint of the cluster
+* `eks.certificate` - the certificate authority of this cluster.
+
+The `eks-values.sh` script can be used to query the values for an existing cluster and create a
+values file:
+
+```sh
+$ ./eks-values.sh CLUSTER-NAME > values.yaml
+$ wing compile -t tf-aws --values ./values.yaml main.w
+```
 
 ## TODO
 
@@ -46,7 +60,7 @@ See [Captain's Log](https://winglang.slack.com/archives/C047QFSUL5R/p16968681568
 - [x] EKS as a singleton
 - [ ] Add support for local Dockerfiles (currently only images from Docker Hub are supported), this
       includes publishing into an ECR.
-- [ ] Reference existing EKS repository.
+- [x] Reference existing EKS repository.
 - [ ] Use a `cloud.Redis` database
 - [ ] Implement `cloud.Service` using containers.
 - [ ] Deploy multiple workloads (maybe guestbook?)

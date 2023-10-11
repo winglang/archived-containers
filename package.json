@@ -1,10 +1,10 @@
 {
   "name": "wing-containers",
   "version": "1.0.0",
-  "description": "",
+  "description": "A containers library for Wing",
   "main": "index.js",
   "scripts": {
-    "build": "wing test test/containers.test.w"
+    "build": "wing test test/*.test.w"
   },
   "author": {
     "email": "eladb@wing.cloud",
@@ -17,6 +17,6 @@
     "@cdktf/provider-kubernetes": "^9.0.0",
     "cdk8s-plus-27": "^2.7.33",
     "cdktf": "^0.18.2",
-    "winglang": "^0.36.1"
+    "winglang": "^0.37.1"
   }
 }

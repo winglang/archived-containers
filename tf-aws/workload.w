@@ -6,7 +6,7 @@ bring "cdktf" as cdktf3;
 
 class Workload impl api.IWorkload {
   init(props: api.WorkloadProps) {
-    let name = "${this.node.id.replace(".", "-")}-${this.node.addr.substring(0, 6)}";
+    let name = "${this.node.id.replace(".", "-").substring(0, 40).lowercase()}-${this.node.addr.substring(0, 6)}";
     let cluster = eks.Cluster.getOrCreate(this);
     let chart = new _Chart(name, props);
     let helmDir = chart.toHelm();

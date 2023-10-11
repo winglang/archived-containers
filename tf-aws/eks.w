@@ -56,12 +56,32 @@ class Cluster impl ICluster {
 
   /** singleton */
   pub static getOrCreate(scope: std.IResource): ICluster {
-    // values.get("foo");
-
     let stack = cdktf.TerraformStack.of(scope);
     let uid = "WingEksCluster";
-    let existing: Cluster? = unsafeCast(stack.node.tryFindChild(uid));
-    return existing ?? new Cluster() as uid in stack;
+    let existing: ICluster? = unsafeCast(stack.node.tryFindChild(uid));
+
+    let newCluster = (): ICluster => {
+      if let attrs = Cluster.tryGetClusterAttributes() {
+        return new ClusterRef(attrs) as uid in stack;
+      } else {
+        return new Cluster() as uid in stack;
+      }
+    };
+
+    return existing ?? newCluster();
+  }
+
+  static tryGetClusterAttributes(): ClusterAttributes? {
+    if !values.has("eks.cluster_name") {
+      return nil;
+    }
+
+    return ClusterAttributes {
+      name: values.get("eks.cluster_name"),
+      certificate: values.get("eks.certificate"),
+      endpoint: values.get("eks.endpoint"),
+    };
+
   }
 
   _attributes: ClusterAttributes;
