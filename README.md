@@ -53,7 +53,7 @@ $ ./eks-values.sh CLUSTER-NAME > values.yaml
 $ wing compile -t tf-aws --values ./values.yaml main.w
 ```
 
-## TODO
+## Roadmap
 
 See [Captain's Log](https://winglang.slack.com/archives/C047QFSUL5R/p1696868156845019) in the [Wing Slack](https://t.winglang.io).
 
@@ -63,18 +63,16 @@ See [Captain's Log](https://winglang.slack.com/archives/C047QFSUL5R/p16968681568
 - [x] Reference existing EKS repository.
 - [ ] Use a `cloud.Redis` database
 - [ ] Implement `cloud.Service` using containers.
-- [ ] Deploy multiple workloads (maybe guestbook?)
+- [ ] Reference workload from another workload (without going through the load balancer).
 - [ ] Publish the library
+- [ ] `url()` and `internalUrl()` or something like this.
 - [x] Generate helm charts under target directory
-- [ ] Implement `start()` and `stop()` and `url()`.
+- [ ] Implement `start()` and `stop()`.
 - [ ] Sidecar containers
 - [ ] Domains
 - [ ] SSL
-- [ ] What happens if I deploy more than one app into the cluster? Add support for ingress routes
-      (currently all routes go to the container).
 - [x] Nodes - what should we do there? Use Fargate profiles in EKS instead of managed node groups?
 - [ ] Open bugs
-- [ ] Allow referencing an existing EKS cluster.
 
 ## License
 
