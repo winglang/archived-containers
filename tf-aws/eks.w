@@ -60,7 +60,7 @@ class Cluster impl ICluster {
 
     let stack = cdktf.TerraformStack.of(scope);
     let uid = "WingEksCluster";
-    let existing = EksUtil.toEksCluster(stack.node.tryFindChild(uid));
+    let existing: Cluster? = unsafeCast(stack.node.tryFindChild(uid));
     return existing ?? new Cluster() as uid in stack;
   }
 
@@ -226,8 +226,4 @@ class Cluster impl ICluster {
       ]
     );
   }
-}
-
-class EksUtil {
-  extern "./util.js" pub static toEksCluster(scope: c.IConstruct?): ICluster?;
 }

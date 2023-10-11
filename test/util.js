@@ -1,9 +1,7 @@
 const child_process = require("child_process");
 const cdk8s = require('cdk8s');
 const fs = require('fs');
-const os = require('os');
 const path = require('path');
-const cdktf = require('cdktf');
 const wingsdk = require('@winglang/sdk');
 const crypto = require('crypto');
 
@@ -26,9 +24,7 @@ exports.entrypointDir = function (scope) {
 
 exports.toHelmChart = function(chart) {
   const app = cdk8s.App.of(chart);
-  const outdir = wingsdk.core.App.of(chart).workdir;
-  console.log(outdir);
-
+  const wingdir = wingsdk.core.App.of(chart).workdir;
 
   app.resolvers = [new cdk8s.LazyResolver(), new cdk8s.ImplicitTokenResolver(), new cdk8s.NumberStringUnionResolver()];
   const docs = cdk8s.App._synthChart(chart);
@@ -37,7 +33,7 @@ exports.toHelmChart = function(chart) {
   const hash = crypto.createHash("md5").update(yaml).digest("hex");
   const reldir = `helm/${chart.name}-${hash}`;
 
-  const workdir = path.join(outdir, reldir);//fs.mkdtempSync(path.join(os.tmpdir(), "helm."));
+  const workdir = path.join(wingdir, reldir);
   const templates = path.join(workdir, "templates");
   fs.mkdirSync(templates, { recursive: true });
   fs.writeFileSync(path.join(templates, "all.yaml"), yaml);
@@ -55,6 +51,3 @@ exports.toHelmChart = function(chart) {
 
   return path.join("./", ".wing", reldir);
 };
-
-exports.toEksCluster = x => x;
-
