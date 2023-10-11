@@ -13,7 +13,8 @@ class Workload impl api.IWorkload {
   init(props: api.WorkloadProps) {
     this.appDir = Workload.entrypointDir(this);
     this.props = props;
-    this.containerId = "wing-${this.node.addr}";
+    let hash = util.sha256(Json.stringify(props));
+    this.containerId = "wing-${this.node.addr.substring(0, 6)}-${hash}";
     this.bucket = new cloud.Bucket();
     this.urlKey = "url";
 
