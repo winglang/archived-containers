@@ -5,11 +5,9 @@ if [ -z "$1" ]; then
 fi
 
 export cluster_name=$1
-export cluster_endpoint=$(aws eks describe-cluster --name $cluster_name --query "cluster.endpoint")
-export cluster_certificate=$(aws eks describe-cluster --name $cluster_name --query "cluster.certificateAuthority.data")
 
 cat << EOF
 eks.cluster_name: $cluster_name
-eks.endpoint: $cluster_endpoint
-eks.certificate: $cluster_certificate
+eks.endpoint: $(aws eks describe-cluster --name $cluster_name --query "cluster.endpoint")
+eks.certificate: $(aws eks describe-cluster --name $cluster_name --query "cluster.certificateAuthority.data")
 EOF
