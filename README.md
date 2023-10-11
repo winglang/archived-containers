@@ -70,6 +70,7 @@ See [Captain's Log](https://winglang.slack.com/archives/C047QFSUL5R/p16968681568
 - [ ] Implement `start()` and `stop()`.
 - [ ] Sidecar containers
 - [ ] Domains
+- [ ] How can we vend `./eks-value.sh` as part of this library?
 - [ ] SSL
 - [x] Nodes - what should we do there? Use Fargate profiles in EKS instead of managed node groups?
 - [ ] Open bugs
