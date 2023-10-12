@@ -58,14 +58,16 @@ $ wing compile -t tf-aws --values ./values.yaml main.w
 See [Captain's Log](https://winglang.slack.com/archives/C047QFSUL5R/p1696868156845019) in the [Wing Slack](https://t.winglang.io).
 
 - [x] EKS as a singleton
-- [ ] Add support for local Dockerfiles (currently only images from Docker Hub are supported), this
+- [x] Add support for local Dockerfiles (currently only images from Docker Hub are supported), this
       includes publishing into an ECR.
+- [ ] Invalidation of local docker image (both local and in registry). Check what cdk-assets is doing.
 - [x] Reference existing EKS repository.
 - [ ] Use a `cloud.Redis` database
 - [ ] Implement `cloud.Service` using containers.
 - [ ] Reference workload from another workload (without going through the load balancer).
 - [ ] Publish the library
 - [ ] `url()` and `internalUrl()` or something like this.
+- [ ] Enable logging (`Disabled logging because aws-logging configmap was not found. configmap "aws-logging" not found`).
 - [x] Generate helm charts under target directory
 - [ ] Implement `start()` and `stop()`.
 - [ ] Sidecar containers

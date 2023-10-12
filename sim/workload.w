@@ -16,14 +16,19 @@ class Workload impl api.IWorkload {
     let hash = util.sha256(Json.stringify(props));
     this.containerId = "wing-${this.node.addr.substring(0, 6)}-${hash}";
     this.bucket = new cloud.Bucket();
+
     this.urlKey = "url";
 
-    new cloud.Service(inflight () => {
+    let svc = new cloud.Service(inflight () => {
       this.start();
       return () => {
         this.stop();
       };
     });
+
+    std.Node.of(this).title = props.image;
+    std.Node.of(this.bucket).hidden = true;
+    std.Node.of(svc).hidden = true;
   }
 
   pub inflight start(): void {
@@ -113,6 +118,6 @@ class Workload impl api.IWorkload {
     return this.bucket.tryGet(this.urlKey);
   }  
 
-  extern "./util.js" static inflight shell(command: str, args: Array<str>, cwd: str?): str;
-  extern "./util.js" static entrypointDir(root: std.IResource): str;
+  extern "../util.js" static inflight shell(command: str, args: Array<str>, cwd: str?): str;
+  extern "../util.js" static entrypointDir(root: std.IResource): str;
 }

@@ -3,19 +3,38 @@ bring "./eks.w" as eks;
 bring "cdk8s-plus-27" as cdk8s;
 bring "cdk8s" as k8s;
 bring "cdktf" as cdktf3;
+bring "./ecr.w" as ecr;
 
 class Workload impl api.IWorkload {
   init(props: api.WorkloadProps) {
     let name = "${this.node.id.replace(".", "-").substring(0, 40).lowercase()}-${this.node.addr.substring(0, 6)}";
     let cluster = eks.Cluster.getOrCreate(this);
+
+    let var image = props.image;
+    let var dep: std.IResource? = nil;
+
+    if props.image.startsWith("./") {
+      let appDir = Workload.entrypointDir(this);
+      let repository = new ecr.Repository(
+        directory: appDir + "/" + props.image,
+        tag: name
+      );
+
+      image = repository.image;
+      dep = repository;
+    }
+
     let chart = new _Chart(name, props);
     let helmDir = chart.toHelm();
 
-    new eks.HelmChart(
+    let helm = new eks.HelmChart(
       cluster,
       name: name,
       chart: helmDir,
+      values: ["image: ${image}"],
     );
+
+    helm.node.addDependency(dep);
   }
 
   pub inflight start() {
@@ -29,6 +48,8 @@ class Workload impl api.IWorkload {
   pub inflight url(): str? {
     throw "Not implemented yet";
   }
+
+  extern "../util.js" static entrypointDir(root: std.IResource): str;
 }
 
 class _Chart extends k8s.Chart {
@@ -64,7 +85,7 @@ class _Chart extends k8s.Chart {
     );
 
     deployment.addContainer(
-      image: props.image,
+      image: "{{ .Values.image }}",
       envVariables: envVariables.copy(),
       ports: ports.copy(),
       readiness: readiness,

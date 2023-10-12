@@ -7,6 +7,7 @@ bring "@cdktf/provider-helm" as helm4;
 bring "@cdktf/provider-kubernetes" as kubernetes;
 bring "./vpc.w" as v;
 bring "./values.w" as values;
+bring "./aws.w" as aws_info;
 
 struct ClusterAttributes {
   name: str;
@@ -200,7 +201,8 @@ class Cluster impl ICluster {
   }
 
   addLoadBalancerController() {
-    let region = new tfaws.dataAwsRegion.DataAwsRegion();
+    let awsInfo = aws_info.Aws.getOrCreate(this);
+
     let serviceAccountName = "aws-load-balancer-controller";
     let lbRole = new cdktf.TerraformHclModule(
       source: "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks",
@@ -238,7 +240,7 @@ class Cluster impl ICluster {
       namespace: "kube-system",
       dependsOn: [serviceAccount],
       set: [
-        { name: "region", value: region.name },
+        { name: "region", value: awsInfo.region() },
         { name: "vpcId", value: this.vpc.id },
         { name: "serviceAccount.create", value: "false" },
         { name: "serviceAccount.name", value: serviceAccountName },

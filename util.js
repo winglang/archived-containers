@@ -1,4 +1,6 @@
 const child_process = require("child_process");
+const fs = require('fs');
+const wingsdk = require('@winglang/sdk');
 
 exports.shell = async function (command, args, cwd) {
   return new Promise((resolve, reject) => {
@@ -14,5 +16,13 @@ exports.shell = async function (command, args, cwd) {
 };
 
 exports.entrypointDir = function (scope) {
-  return scope.node.root.entrypointDir;
+  return wingsdk.core.App.of(scope).entrypointDir;
+};
+
+exports.fileExists = function(path) {
+  return fs.existsSync(path);
+};
+
+exports.dirname = function() {
+  return __dirname;
 };

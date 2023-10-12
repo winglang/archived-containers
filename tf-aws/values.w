@@ -7,6 +7,10 @@ class Util {
 
     if let valuesFile = util.tryEnv("WING_VALUES_FILE") {
       if valuesFile != "undefined" { // bug
+        if !Util.fileExists(valuesFile) {
+          throw "Values file ${valuesFile} not found";
+        }
+
         let yaml = values_cdk8s.Yaml.load(valuesFile);
         for x in yaml {
           let y: Json = x;
@@ -47,4 +51,6 @@ class Util {
       throw "Missing platform value '${key}' (use --values or -v)";
     }
   }
+
+  extern "../util.js" static fileExists(path: str): bool;
 }
