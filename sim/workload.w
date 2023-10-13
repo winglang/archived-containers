@@ -15,10 +15,11 @@ class Workload impl api.IWorkload {
   init(props: api.WorkloadProps) {
     this.appDir = utils.entrypointDir(this);
     this.props = props;
-    let hash = util.sha256(Json.stringify(props));
-    this.containerId = "wing-${this.node.addr.substring(0, 6)}-${hash}";
+
     this.bucket = new cloud.Bucket();
-    this.imageTag = utils.resolveContentHash(this, props);
+    let hash = utils.resolveContentHash(this, props);
+    this.imageTag = "${props.name}:${hash}";
+    this.containerId = this.imageTag;
 
     this.urlKey = "url";
 

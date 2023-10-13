@@ -10,6 +10,7 @@ interface IWorkload extends std.IResource {
 }
 
 struct ContainerOpts {
+  name: str;
   image: str;
   port: num?;
   env: Map<str>?;

@@ -18,6 +18,7 @@ The `Workload` resource represents a containerized workload.
 bring "wing-containers" as containers;
 
 new containers.Workload(
+  name: "hello",
   image: "paulbouwer/hello-kubernetes:1",
   port: 8080,
   readiness: "/",
@@ -25,7 +26,7 @@ new containers.Workload(
   env: {
     "MESSAGE" => message,
   }
-) as "hello";
+);
 ```
 
 ## `sim`
@@ -63,14 +64,31 @@ new containers.tfaws.Cluster() as "my-wing-cluster";
 
 And provision it using Terraform:
 
-```js
-$ wing compile -t tf-aws eks.main.w
-$ cd target/eks.main.tfaws
-$ terraform init
-$ terraform apply
+```sh
+wing compile -t tf-aws eks.main.w
+cd target/eks.main.tfaws
+terraform init
+terraform apply
+./eks-values.sh my-wing-cluster > values.yaml
 ```
 
 This might take a up to 20 minutes to provision (now you see why we want to share it across apps?).
+The last command will populate `values.yaml` with the the cluster information needed to deploy
+workloads.
+
+To connect to this cluster using `kubectl`, use:
+
+```sh
+aws eks update-kubeconfig --name my-wing-cluster
+```
+
+Then:
+
+```sh
+$ kubectl get all
+NAME                 TYPE        CLUSTER-IP   EXTERNAL-IP   PORT(S)   AGE
+service/kubernetes   ClusterIP   172.20.0.1   <none>        443/TCP   36m
+```
 
 ## Roadmap
 

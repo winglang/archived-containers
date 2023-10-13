@@ -4,6 +4,7 @@ bring http;
 let message = "hello, wing change!!";
 
 let hello = new containers.Workload(
+  name: "hello",
   image: "paulbouwer/hello-kubernetes:1",
   port: 8080,
   readiness: "/",
@@ -12,15 +13,16 @@ let hello = new containers.Workload(
     "MESSAGE" => message,
   },
   public: true,
-) as "hello";
+);
 
 new containers.Workload(
+  name: "http-echo",
   image: "hashicorp/http-echo",
   port: 5678,
   public: true,
   replicas: 2,
   args: ["-text=hello1234"],
-) as "http-echo";
+);
 
 let getBody = inflight (): str? => {
   if let url = hello.url() {

@@ -8,7 +8,6 @@ bring "../utils.w" as workload_utils;
 
 class Workload impl workload_api.IWorkload {
   init(props: workload_api.WorkloadProps) {
-    let name = "${this.node.id.replace(".", "-").substring(0, 40).lowercase()}-${this.node.addr.substring(0, 6)}";
     let cluster = workload_eks.Cluster.getOrCreate(this);
 
     let var image = props.image;
@@ -18,7 +17,7 @@ class Workload impl workload_api.IWorkload {
       let hash = workload_utils.resolveContentHash(this, props);
       let appDir = workload_utils.entrypointDir(this);
       let repository = new workload_ecr.Repository(
-        name: name,
+        name: props.name,
         directory: appDir + "/" + props.image,
         tag: hash
       );
@@ -29,13 +28,13 @@ class Workload impl workload_api.IWorkload {
       }
     }
 
-    let chart = new _Chart(name, props);
+    let chart = new _Chart(props);
     let helmDir = chart.toHelm();
 
     let helm = new workload_eks.HelmChart(
       cluster,
       dependsOn: deps.copy(),
-      name: name,
+      name: props.name,
       chart: helmDir,
       values: ["image: ${image}"],
     );
@@ -57,7 +56,7 @@ class Workload impl workload_api.IWorkload {
 class _Chart extends workload_cdk8s.Chart {
   name: str;
 
-  init(name: str, props: workload_api.WorkloadProps) {
+  init(props: workload_api.WorkloadProps) {
     let env = props.env ?? {};
     let envVariables = MutMap<workload_plus.EnvValue>{};
 
@@ -82,7 +81,7 @@ class _Chart extends workload_cdk8s.Chart {
     let deployment = new workload_plus.Deployment(
       replicas: props.replicas,
       metadata: {
-        name: name
+        name: props.name
       },
     );
 
@@ -105,14 +104,14 @@ class _Chart extends workload_cdk8s.Chart {
     }
 
     let service = deployment.exposeViaService(
-      name: name,
+      name: props.name,
       serviceType: serviceType,
     );
 
     if isPublic {
       new workload_plus.Ingress(
         metadata: {
-          name: name,
+          name: props.name,
           annotations: {
             "kubernetes.io/ingress.class": "alb",
             "alb.ingress.kubernetes.io/scheme": "internet-facing",
@@ -126,7 +125,7 @@ class _Chart extends workload_cdk8s.Chart {
       );
     }
 
-    this.name = name;
+    this.name = props.name;
   }
 
   pub toHelm(): str {
