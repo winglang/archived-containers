@@ -8,7 +8,7 @@ class Util {
 
   pub static resolveContentHash(scope: std.IResource, props: utils_api.WorkloadProps): str {
     if !props.image.startsWith("./") {
-      throw "image is not a local docker build: ${props.image}";
+      return props.image;
     }
     
     let sources = props.sources ?? ["**/*"];

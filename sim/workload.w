@@ -10,13 +10,15 @@ class Workload impl api.IWorkload {
   urlKey: str;
   props: api.WorkloadProps;
   appDir: str;
-
+  imageTag: str;
+  
   init(props: api.WorkloadProps) {
     this.appDir = utils.entrypointDir(this);
     this.props = props;
     let hash = util.sha256(Json.stringify(props));
     this.containerId = "wing-${this.node.addr.substring(0, 6)}-${hash}";
     this.bucket = new cloud.Bucket();
+    this.imageTag = utils.resolveContentHash(this, props);
 
     this.urlKey = "url";
 
@@ -39,14 +41,12 @@ class Workload impl api.IWorkload {
     let opts = this.props;
 
     let image = opts.image;
-    let var imageTag = image;
 
     // if this a reference to a local directory, build the image from a docker file
     log("image: ${image}");
     if image.startsWith("./") {
-      imageTag = this.containerId;
-      log("building locally from ${image} and tagging ${imageTag}...");
-      utils.shell("docker", ["build", "-t", imageTag, image], this.appDir);
+      log("building locally from ${image} and tagging ${this.imageTag}...");
+      utils.shell("docker", ["build", "-t", this.imageTag, image], this.appDir);
     } else {
       utils.shell("docker", ["pull", opts.image], this.appDir);
     }
@@ -75,7 +75,7 @@ class Workload impl api.IWorkload {
       }
     }
 
-    dockerRun.push(imageTag);
+    dockerRun.push(this.imageTag);
 
     if let runArgs = this.props.args {
       for a in runArgs {

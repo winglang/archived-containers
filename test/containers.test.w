@@ -22,11 +22,6 @@ new containers.Workload(
   args: ["-text=hello1234"],
 ) as "http-echo";
 
-// new containers.Workload(
-//   image: "./my-app/Dockerfile",
-//   port: 3000
-// );
-
 let getBody = inflight (): str? => {
   if let url = hello.url() {
     return http.get(url).body;
