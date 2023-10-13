@@ -1,5 +1,6 @@
-bring "cdk8s" as values_cdk8s;
 bring util;
+bring fs;
+bring "../utils.w" as values_utils;
 
 class Util {
   pub static all(): Map<str> {
@@ -7,15 +8,12 @@ class Util {
 
     if let valuesFile = util.tryEnv("WING_VALUES_FILE") {
       if valuesFile != "undefined" { // bug
-        if !Util.fileExists(valuesFile) {
+        if !fs.exists(valuesFile) {
           throw "Values file ${valuesFile} not found";
         }
 
-        let yaml = values_cdk8s.Yaml.load(valuesFile);
-        for x in yaml {
-          let y: Json = x;
-  
-          for entry in Json.entries(y) {
+        for x in fs.readYaml(valuesFile) {
+          for entry in Json.entries(x) {
             all.set(entry.key, entry.value.asStr());
           }
         }
@@ -37,7 +35,7 @@ class Util {
   }
 
   pub static tryGet(key: str): str? {
-    return Util.all().get(key);
+    return Util.all().tryGet(key);
   }
 
   pub static has(key: str): bool {
@@ -51,6 +49,4 @@ class Util {
       throw "Missing platform value '${key}' (use --values or -v)";
     }
   }
-
-  extern "../util.js" static fileExists(path: str): bool;
 }

@@ -1,12 +1,7 @@
-bring "../tf-aws/ecr.w" as ecr2;
+bring "../tf-aws/ecr.w" as ecr;
+bring "../utils.w" as utils;
 
-class Test {
-  init() {
-    let x = ecr2.EcrRepository.getOrCreate(this);
-    x.publish(Test.dirname() + "/test/my-app", "t3");
-  }
-
-  extern "../util.js" static dirname(): str;
-}
-
-new Test();
+new ecr.Repository(
+  directory: utils.dirname() + "/test/my-app",
+  tag: "t3"
+);

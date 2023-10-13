@@ -1,21 +1,21 @@
-bring "cdktf" as cdktf99;
-bring "@cdktf/provider-aws" as aws99;
+bring "cdktf" as aws_cdktf;
+bring "@cdktf/provider-aws" as aws_aws;
 
 class Aws {
   pub static getOrCreate(scope: std.IResource): Aws {
-    let stack = cdktf99.TerraformStack.of(scope);
+    let stack = aws_cdktf.TerraformStack.of(scope);
     let id = "WingAwsUtil";
     let existing: Aws? = unsafeCast(stack.node.tryFindChild(id));
     return (existing ?? new Aws() as id in stack);
   }
 
-  regionData: aws99.dataAwsRegion.DataAwsRegion;
-  accountData: aws99.dataAwsCallerIdentity.DataAwsCallerIdentity;
+  regionData: aws_aws.dataAwsRegion.DataAwsRegion;
+  accountData: aws_aws.dataAwsCallerIdentity.DataAwsCallerIdentity;
 
 
   init() { 
-    this.regionData = new aws99.dataAwsRegion.DataAwsRegion();
-    this.accountData = new aws99.dataAwsCallerIdentity.DataAwsCallerIdentity();
+    this.regionData = new aws_aws.dataAwsRegion.DataAwsRegion();
+    this.accountData = new aws_aws.dataAwsCallerIdentity.DataAwsCallerIdentity();
   }
 
   pub region(): str {

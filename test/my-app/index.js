@@ -8,7 +8,7 @@ process.on('SIGINT', () => {
 
 const server = http.createServer((req, res) => {
   console.log(`request received: ${req.method} ${req.url}`);
-  res.end('Hello, world number 2!');
+  res.end('Hello, Wingnuts!');
 });
 
 console.log('listening on port 3000');

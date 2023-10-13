@@ -1,7 +1,8 @@
-bring "../api.w" as api;
 bring http;
 bring util;
 bring cloud;
+bring "../api.w" as api;
+bring "../utils.w" as utils;
 
 class Workload impl api.IWorkload {
   containerId: str;
@@ -11,7 +12,7 @@ class Workload impl api.IWorkload {
   appDir: str;
 
   init(props: api.WorkloadProps) {
-    this.appDir = Workload.entrypointDir(this);
+    this.appDir = utils.entrypointDir(this);
     this.props = props;
     let hash = util.sha256(Json.stringify(props));
     this.containerId = "wing-${this.node.addr.substring(0, 6)}-${hash}";
@@ -38,53 +39,53 @@ class Workload impl api.IWorkload {
     let opts = this.props;
 
     let image = opts.image;
-    let var tag = image;
+    let var imageTag = image;
 
     // if this a reference to a local directory, build the image from a docker file
     log("image: ${image}");
     if image.startsWith("./") {
-      tag = this.containerId;
-      log("building locally from ${image} and tagging ${tag}...");
-      Workload.shell("docker", ["build", "-t", tag, image], this.appDir);
+      imageTag = this.containerId;
+      log("building locally from ${image} and tagging ${imageTag}...");
+      utils.shell("docker", ["build", "-t", imageTag, image], this.appDir);
     } else {
-      Workload.shell("docker", ["pull", opts.image], this.appDir);
+      utils.shell("docker", ["pull", opts.image], this.appDir);
     }
 
     // remove old container
-    Workload.shell("docker", ["rm", "-f", this.containerId]);
+    utils.shell("docker", ["rm", "-f", this.containerId]);
     
     // start the new container
-    let args = MutArray<str>[];
-    args.push("run");
-    args.push("--detach");
-    args.push("--name");
-    args.push(this.containerId);
+    let dockerRun = MutArray<str>[];
+    dockerRun.push("run");
+    dockerRun.push("--detach");
+    dockerRun.push("--name");
+    dockerRun.push(this.containerId);
 
     if let port = opts.port {
-      args.push("-p");
-      args.push("${port}");
+      dockerRun.push("-p");
+      dockerRun.push("${port}");
     }
 
     if let env = opts.env {
       if env.size() > 0 {
-        args.push("-e");
+        dockerRun.push("-e");
         for k in env.keys() {
-          args.push("${k}=${env.get(k)}");
+          dockerRun.push("${k}=${env.get(k)}");
         }
       }
     }
 
-    args.push(tag);
+    dockerRun.push(imageTag);
 
     if let runArgs = this.props.args {
       for a in runArgs {
-        args.push(a);
+        dockerRun.push(a);
       }
     }
 
-    Workload.shell("docker", args.copy());
+    utils.shell("docker", dockerRun.copy());
 
-    let out = Json.parse(Workload.shell("docker", ["inspect", this.containerId]));
+    let out = Json.parse(utils.shell("docker", ["inspect", this.containerId]));
 
     if let port = opts.port {
       let hostPort = out.tryGetAt(0)?.tryGet("NetworkSettings")?.tryGet("Ports")?.tryGet("${port}/tcp")?.tryGetAt(0)?.tryGet("HostPort")?.tryAsStr();
@@ -111,13 +112,10 @@ class Workload impl api.IWorkload {
 
   pub inflight stop() {
     log("stopping container");
-    Workload.shell("docker", ["rm", "-f", this.containerId]);
+    utils.shell("docker", ["rm", "-f", this.containerId]);
   }
 
   pub inflight url(): str? {
     return this.bucket.tryGet(this.urlKey);
   }  
-
-  extern "../util.js" static inflight shell(command: str, args: Array<str>, cwd: str?): str;
-  extern "../util.js" static entrypointDir(root: std.IResource): str;
 }

@@ -1,40 +1,44 @@
-bring "../api.w" as api;
-bring "./eks.w" as eks;
-bring "cdk8s-plus-27" as cdk8s;
-bring "cdk8s" as k8s;
-bring "cdktf" as cdktf3;
-bring "./ecr.w" as ecr;
+bring "../api.w" as workload_api;
+bring "./eks.w" as workload_eks;
+bring "cdk8s-plus-27" as workload_plus;
+bring "cdk8s" as workload_cdk8s;
+bring "cdktf" as workload_cdktf;
+bring "./ecr.w" as workload_ecr;
+bring "../utils.w" as workload_utils;
 
-class Workload impl api.IWorkload {
-  init(props: api.WorkloadProps) {
+class Workload impl workload_api.IWorkload {
+  init(props: workload_api.WorkloadProps) {
     let name = "${this.node.id.replace(".", "-").substring(0, 40).lowercase()}-${this.node.addr.substring(0, 6)}";
-    let cluster = eks.Cluster.getOrCreate(this);
+    let cluster = workload_eks.Cluster.getOrCreate(this);
 
     let var image = props.image;
-    let var dep: std.IResource? = nil;
+    let var deps = MutArray<workload_cdktf.ITerraformDependable>[];
 
     if props.image.startsWith("./") {
-      let appDir = Workload.entrypointDir(this);
-      let repository = new ecr.Repository(
+      let hash = workload_utils.resolveContentHash(this, props);
+      let appDir = workload_utils.entrypointDir(this);
+      let repository = new workload_ecr.Repository(
+        name: name,
         directory: appDir + "/" + props.image,
-        tag: name
+        tag: hash
       );
 
       image = repository.image;
-      dep = repository;
+      for d in repository.deps {
+        deps.push(d);
+      }
     }
 
     let chart = new _Chart(name, props);
     let helmDir = chart.toHelm();
 
-    let helm = new eks.HelmChart(
+    let helm = new workload_eks.HelmChart(
       cluster,
+      dependsOn: deps.copy(),
       name: name,
       chart: helmDir,
       values: ["image: ${image}"],
     );
-
-    helm.node.addDependency(dep);
   }
 
   pub inflight start() {
@@ -48,36 +52,34 @@ class Workload impl api.IWorkload {
   pub inflight url(): str? {
     throw "Not implemented yet";
   }
-
-  extern "../util.js" static entrypointDir(root: std.IResource): str;
 }
 
-class _Chart extends k8s.Chart {
+class _Chart extends workload_cdk8s.Chart {
   name: str;
 
-  init(name: str, props: api.WorkloadProps) {
+  init(name: str, props: workload_api.WorkloadProps) {
     let env = props.env ?? {};
-    let envVariables = MutMap<cdk8s.EnvValue>{};
+    let envVariables = MutMap<workload_plus.EnvValue>{};
 
     for k in env.keys() {
-      envVariables.set(k, cdk8s.EnvValue.fromValue(env.get(k)));
+      envVariables.set(k, workload_plus.EnvValue.fromValue(env.get(k)));
     }
 
-    let ports = MutArray<cdk8s.ContainerPort>[];
+    let ports = MutArray<workload_plus.ContainerPort>[];
     if let port = props.port {
       ports.push({ number: port });
     }
 
-    let var readiness: cdk8s.Probe? = nil;
+    let var readiness: workload_plus.Probe? = nil;
     if let x = props.readiness {
       if let port = props.port {
-        readiness = cdk8s.Probe.fromHttpGet(x, port: port);
+        readiness = workload_plus.Probe.fromHttpGet(x, port: port);
       } else {
         throw "Cannot setup readiness probe without a `port`";
       }
     }
 
-    let deployment = new cdk8s.Deployment(
+    let deployment = new workload_plus.Deployment(
       replicas: props.replicas,
       metadata: {
         name: name
@@ -96,10 +98,10 @@ class _Chart extends k8s.Chart {
     );
 
     let isPublic = props.public ?? false;
-    let var serviceType: cdk8s.ServiceType? = nil;
+    let var serviceType: workload_plus.ServiceType? = nil;
 
     if isPublic {
-      serviceType = cdk8s.ServiceType.NODE_PORT;
+      serviceType = workload_plus.ServiceType.NODE_PORT;
     }
 
     let service = deployment.exposeViaService(
@@ -108,7 +110,7 @@ class _Chart extends k8s.Chart {
     );
 
     if isPublic {
-      new cdk8s.Ingress(
+      new workload_plus.Ingress(
         metadata: {
           name: name,
           annotations: {
@@ -120,7 +122,7 @@ class _Chart extends k8s.Chart {
             "alb.ingress.kubernetes.io/healthcheck-path": "/",
           }
         },
-        defaultBackend: cdk8s.IngressBackend.fromService(service),
+        defaultBackend: workload_plus.IngressBackend.fromService(service),
       );
     }
 
@@ -131,5 +133,5 @@ class _Chart extends k8s.Chart {
     return _Chart.toHelmChart(this);
   }
 
-  extern "./util.js" pub static toHelmChart(chart: k8s.Chart): str;
+  extern "./util.js" pub static toHelmChart(chart: workload_cdk8s.Chart): str;
 }

@@ -1,5 +1,5 @@
-bring "@cdktf/provider-aws" as aws2;
-bring "cdktf" as cdktf2;
+bring "@cdktf/provider-aws" as vpc_aws;
+bring "cdktf" as vpc_cdktf;
 
 struct VpcProps {
   publicSubnetTags: Map<str>?;
@@ -12,7 +12,7 @@ class Vpc {
   pub publicSubnets: Array<str>;
 
   init(props: VpcProps?) {
-    let available = new aws2.dataAwsAvailabilityZones.DataAwsAvailabilityZones(filter: {
+    let available = new vpc_aws.dataAwsAvailabilityZones.DataAwsAvailabilityZones(filter: {
       name: "opt-in-status",
       values: ["opt-in-not-required"]
     });
@@ -20,12 +20,12 @@ class Vpc {
     let publicSubnetTags = props?.publicSubnetTags ?? {};
     let privateSubnetTags = props?.privateSubnetTags ?? {};
 
-    let vpc = new cdktf2.TerraformHclModule(
+    let vpc = new vpc_cdktf.TerraformHclModule(
       source: "terraform-aws-modules/vpc/aws",
       version: "4.0.2",
       variables: {
         cidr: "10.0.0.0/16",
-        azs: cdktf2.Fn.slice(available.names, 0, 3),
+        azs: vpc_cdktf.Fn.slice(available.names, 0, 3),
         private_subnets: ["10.0.1.0/24", "10.0.2.0/24", "10.0.3.0/24"],
         public_subnets: ["10.0.4.0/24", "10.0.5.0/24", "10.0.6.0/24"],
 

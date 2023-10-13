@@ -1,7 +1,8 @@
+bring util;
 bring "./sim" as sim;
 bring "./tf-aws" as aws;
 bring "./api.w" as api;
-bring util;
+bring "./utils.w" as utils;
 
 class Workload impl api.IWorkload {
   inner: api.IWorkload;

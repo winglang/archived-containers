@@ -1,32 +1,35 @@
-bring "@cdktf/provider-aws" as tfaws2;
-bring "cdktf" as cdktf22;
-bring "@cdktf/provider-null" as null_provider;
-bring "@cdktf/provider-random" as random;
-bring "./aws.w" as aws999;
+bring "@cdktf/provider-aws" as ecr_aws;
+bring "cdktf" as ecr_cdktf;
+bring "@cdktf/provider-null" as ecr_null;
+bring "./aws.w" as ecr_aws_info;
 
 struct RepositoryProps {
   directory: str;
+  name: str;
   tag: str;
 }
 
 class Repository {
   pub image: str;
+  pub deps: Array<ecr_cdktf.ITerraformDependable>;
 
   init(props: RepositoryProps) {
-    new random.provider.RandomProvider();
-    // let uid = new random.id.Id(byteLength: 4).id;
-    let uid = new random.integer.Integer(min: 100, max: 999).id;
-    let repositoryName = "wing-ecr-${this.node.addr.substring(0, 6)}-${uid}";
+    let deps = MutArray<ecr_cdktf.ITerraformDependable>[];
+
     let count = 5;
 
-    let r = new tfaws2.ecrRepository.EcrRepository(
-      name: repositoryName,
+    let r = new ecr_aws.ecrRepository.EcrRepository(
+      name: props.name,
+      forceDelete: true,
+      imageTagMutability: "IMMUTABLE",
       imageScanningConfiguration: {
         scanOnPush: true,
       }
     );
+
+    deps.push(r);
     
-    new tfaws2.ecrLifecyclePolicy.EcrLifecyclePolicy(
+    new ecr_aws.ecrLifecyclePolicy.EcrLifecyclePolicy(
       repository: r.name,
       policy: Json.stringify({
         rules: [
@@ -46,30 +49,34 @@ class Repository {
       })
     );
 
-    let awsInfo = aws999.Aws.getOrCreate(this);
+    let awsInfo = ecr_aws_info.Aws.getOrCreate(this);
     let region = awsInfo.region();
     let accountId = awsInfo.accountId();
     let image = "${r.repositoryUrl}:${props.tag}";
     let arch = "linux/amd64";
 
-    new null_provider.provider.NullProvider();
-    new null_provider.resource.Resource(
+    new ecr_null.provider.NullProvider();
+    
+    let publish = new ecr_null.resource.Resource(
       dependsOn: [r],
       triggers: {
-        tag: props.tag,
+        tag: image,
       },
       provisioners: [
         {
           type: "local-exec",
           command: [
-            "aws ecr get-login-password --region ${region} | docker login --username AWS --password-stdin ${accountId}.dkr.ecr.${region}.amazonaws.com",
-            "docker buildx build --platform ${arch} -t ${image} ${props.directory}",
-            "docker push ${image}",
+            "aws ecr get-login-password --region ${region} | docker login --username AWS --password-stdin ${accountId}.dkr.ecr.${region}.amazonaws.com || exit 1",
+            "docker buildx build --platform ${arch} -t ${image} ${props.directory} || exit 1",
+            "docker push ${image} || exit 1",
           ].join("\n")
         }
       ],
     );
 
+    deps.push(publish);
+
     this.image = image;
+    this.deps = deps.copy();
   }
 }
