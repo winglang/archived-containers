@@ -62,12 +62,12 @@ class Cluster impl ICluster {
     let stack = eks_cdktf.TerraformStack.of(scope);
     let uid = "WingEksCluster";
     let existing: ICluster? = unsafeCast(stack.node.tryFindChild(uid));
-
     let newCluster = (): ICluster => {
       if let attrs = Cluster.tryGetClusterAttributes() {
         return new ClusterRef(attrs) as uid in stack;
       } else {
-        return new Cluster() as uid in stack;
+        let clusterName = "wing-eks-${std.Node.of(scope).addr.substring(0, 6)}";
+        return new Cluster(clusterName) as uid in stack;
       }
     };
 
@@ -92,9 +92,7 @@ class Cluster impl ICluster {
 
   vpc: eks_vpc.Vpc;
 
-  init() {
-    let clusterName = "wing-eks-${this.node.addr.substring(0, 6)}";
-
+  init(clusterName: str) {
     let privateSubnetTags = MutMap<str>{};
     privateSubnetTags.set("kubernetes.io/role/internal-elb", "1");
     privateSubnetTags.set("kubernetes.io/cluster/${clusterName}", "shared");

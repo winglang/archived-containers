@@ -28,30 +28,49 @@ new containers.Workload(
 ) as "hello";
 ```
 
-## Implementations
-
-### `sim`
+## `sim`
 
 When executed in the Wing Simulator, the workload is started within a local Docker container.
 
-### `tf-aws`
+## `tf-aws`
 
-By default an EKS cluster is provisioned and the workload is deployed through Helm into the
-Kubernetes cluster.
+To deploy containerized workloads on AWS, we will need an EKS cluster. Unless other specified, a
+cluster will be automatically provisioned for each Wing application.
 
-To use an existing EKS cluster, the following platform values are required:
+However, it a common practice to reuse a single EKS cluster for multiple applications. To reference
+an existing cluster, you will need to specify the following platform values:
 
-* `eks.cluster_name` - the name of the cluster
-* `eks.endpoint` - the url of the kuberenets api endpoint of the cluster
-* `eks.certificate` - the certificate authority of this cluster.
+* `eks.cluster_name`: The name of the cluster
+* `eks.endpoint`: The URL of the Kubernetes API endpoint of the cluster
+* `eks.certificate`: The certificate authority of this cluster.
 
-The `eks-values.sh` script can be used to query the values for an existing cluster and create a
-values file:
+This information can be obtained from the AWS Console or through the script `eks-values.sh`:
 
 ```sh
 $ ./eks-values.sh CLUSTER-NAME > values.yaml
 $ wing compile -t tf-aws --values ./values.yaml main.w
 ```
+
+To create a new EKS cluster, you can use the `tfaws.Cluster` resource:
+
+`eks.main.w`:
+
+```js
+bring containers;
+
+new containers.tfaws.Cluster() as "my-wing-cluster";
+```
+
+And provision it using Terraform:
+
+```js
+$ wing compile -t tf-aws eks.main.w
+$ cd target/eks.main.tfaws
+$ terraform init
+$ terraform apply
+```
+
+This might take a up to 20 minutes to provision (now you see why we want to share it across apps?).
 
 ## Roadmap
 

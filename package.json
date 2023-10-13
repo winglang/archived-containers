@@ -4,7 +4,7 @@
   "description": "A containers library for Wing",
   "main": "index.js",
   "scripts": {
-    "build": "wing test test/*.test.w"
+    "build": "wing compile ."
   },
   "author": {
     "email": "eladb@wing.cloud",

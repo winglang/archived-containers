@@ -1,6 +1,6 @@
 bring util;
 bring "./sim" as sim;
-bring "./tf-aws" as aws;
+bring "./tfaws" as aws;
 bring "./api.w" as api;
 bring "./utils.w" as utils;
 
