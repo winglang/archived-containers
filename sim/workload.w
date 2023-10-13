@@ -35,19 +35,22 @@ class Workload impl api.IWorkload {
   }
 
   pub inflight start(): void {
-    log("starting container");
-    log("appdir=${this.appDir}");
+    log("starting workload...");
 
     let opts = this.props;
 
-    let image = opts.image;
-
     // if this a reference to a local directory, build the image from a docker file
-    log("image: ${image}");
-    if image.startsWith("./") {
-      log("building locally from ${image} and tagging ${this.imageTag}...");
-      utils.shell("docker", ["build", "-t", this.imageTag, image], this.appDir);
+    if opts.image.startsWith("./") {
+      // check if the image is already built
+      try {
+        utils.shell("docker", ["inspect", this.imageTag]);
+        log("image ${this.imageTag} already exists");
+      } catch {
+        log("building locally from ${opts.image} and tagging ${this.imageTag}...");
+        utils.shell("docker", ["build", "-t", this.imageTag, opts.image], this.appDir);
+      }
     } else {
+      log("pulling ${opts.image}");
       utils.shell("docker", ["pull", opts.image], this.appDir);
     }
 
@@ -83,6 +86,7 @@ class Workload impl api.IWorkload {
       }
     }
 
+    log("starting container ${this.containerId}");
     utils.shell("docker", dockerRun.copy());
 
     let out = Json.parse(utils.shell("docker", ["inspect", this.containerId]));

@@ -1,4 +1,4 @@
-interface IWorkload {
+interface IWorkload extends std.IResource {
   /** starts the container */
   inflight start(): void;
 

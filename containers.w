@@ -17,6 +17,8 @@ class Workload impl api.IWorkload {
     } else {
       throw "unsupported target ${target}";
     }
+
+    std.Node.of(this.inner).hidden = true;
   }
 
   pub inflight start() {
