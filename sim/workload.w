@@ -18,7 +18,7 @@ class Workload impl api.IWorkload {
 
     this.bucket = new cloud.Bucket();
     let hash = utils.resolveContentHash(this, props);
-    this.imageTag = "${props.name}:${hash}";
+    this.imageTag = "${props.name}-${hash}";
     this.containerId = this.imageTag;
 
     this.urlKey = "url";
