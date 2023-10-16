@@ -7,13 +7,19 @@ interface IWorkload extends std.IResource {
 
   /** if `port` is specified, this includes the external url of the container */
   inflight url(): str?;
+
+  /** internal url, `nil` if there is no exposed port */
+  getInternalUrl(): str?;
+
+  // /** extern url, `nil` if there is no exposed port or if `public` is `false` */
+  // publicUrl(): str?;
 }
 
 struct ContainerOpts {
   name: str;
   image: str;
   port: num?;
-  env: Map<str>?;
+  env: Map<str?>?;
   readiness: str?;   // http get
   replicas: num?;    // number of replicas
   public: bool?;     // whether the workload should have a public url (default: false)

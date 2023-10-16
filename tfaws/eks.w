@@ -111,35 +111,30 @@ class Cluster impl ICluster {
       version: "19.17.1",
       variables: {
         cluster_name: clusterName,
-
-        vpc_id: this.vpc.id,
-        subnet_ids: this.vpc.privateSubnets,
+        cluster_version: "1.27",
         cluster_endpoint_public_access: true,
-        eks_managed_node_group_defaults: {
-          ami_type: "AL2_x86_64"
-        },
-        eks_managed_node_groups: {
-          system: {
-            name: "system",
-            instance_types: ["t3.small"],
-            min_size: 1,
-            max_size: 10,
-            desired_size: 10
+        cluster_addons: {
+          "kube-proxy": {},
+          "vpc-cni": {},
+          coredns: {
+            configuration_values: eks_cdktf.Fn.jsonencode({
+              computeType: "Fargate"
+            })
           },
         },
+        vpc_id: this.vpc.id,
+        subnet_ids: this.vpc.privateSubnets,
+        create_cluster_security_group: false,
+        create_node_security_group: false,
         fargate_profiles: {
           default: {
             name: "default",
             selectors: [
-              { namespace: "default" }
+              { namespace: "kube-system" },
+              { namespace: "default" },
             ]
           }
         },
-        cluster_addons: {
-          coredns: {
-            most_recent: true,
-          }
-        }
       }
     ) as "eks";
 
@@ -150,31 +145,6 @@ class Cluster impl ICluster {
     };
 
     this._oidcProviderArn = cluster.get("oidc_provider_arn");
-
-    let ebsCsiPolicy = new eks_aws.dataAwsIamPolicy.DataAwsIamPolicy(arn: "arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy");
-
-    let irsaEbsCsi = new eks_cdktf.TerraformHclModule(
-      source: "terraform-aws-modules/iam/aws//modules/iam-assumable-role-with-oidc",
-      version: "5.30.0",
-      variables: {
-        create_role: true,
-        role_name: "AmazonEKSTFEBSCSIRole-${clusterName}",
-        provider_url: cluster.get("oidc_provider"),
-        role_policy_arns: [ebsCsiPolicy.arn],
-        oidc_fully_qualified_subjects: ["system:serviceaccount:kube-system:ebs-csi-controller-sa"]
-      }
-    ) as "irsa-ebs-csi";
-
-    new eks_aws.eksAddon.EksAddon(
-      clusterName: clusterName,
-      addonName: "aws-ebs-csi-driver",
-      addonVersion: "v1.20.0-eksbuild.1",
-      serviceAccountRoleArn: irsaEbsCsi.get("iam_role_arn"),
-      tags: {
-        "eks_addon" => "ebs-csi",
-        "terraform" => "true",
-      },
-    );
 
     // setup the "kubernetes" terraform provider
     new eks_kubernetes.provider.KubernetesProvider(

@@ -31,9 +31,8 @@ class Workload impl api.IWorkload {
     });
   }
 
-    std.Node.of(this).title = props.image;
-    std.Node.of(this.bucket).hidden = true;
-    std.Node.of(svc).hidden = true;
+  pub getInternalUrl(): str? {
+    throw "Not implemented";
   }
 
   pub inflight start(): void {

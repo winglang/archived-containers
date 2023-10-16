@@ -96,6 +96,7 @@ See [Captain's Log](https://winglang.slack.com/archives/C047QFSUL5R/p16968681568
 Slack](https://t.winglang.io).
 
 - [x] EKS as a singleton
+- [ ] Container logs to Wing logs
 - [x] Add support for local Dockerfiles (currently only images from Docker Hub are supported), this
       includes publishing into an ECR.
 - [x] Invalidation of local docker image (both local and in registry). Check what cdk-assets is
@@ -103,7 +104,7 @@ Slack](https://t.winglang.io).
 - [x] Reference existing EKS repository.
 - [ ] Use a `cloud.Redis` database
 - [ ] Implement `cloud.Service` using containers.
-- [ ] Reference workload from another workload (without going through the load balancer).
+- [x] Reference workload from another workload (without going through the load balancer) - Microservice example.
 - [ ] Publish the library
 - [ ] `url()` and `internalUrl()` or something like this.
 - [ ] Enable logging (`Disabled logging because aws-logging configmap was not found. configmap

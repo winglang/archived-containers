@@ -7,6 +7,8 @@ bring "./ecr.w" as workload_ecr;
 bring "../utils.w" as workload_utils;
 
 class Workload impl workload_api.IWorkload {
+  internalUrl: str?;
+
   init(props: workload_api.WorkloadProps) {
     let cluster = workload_eks.Cluster.getOrCreate(this);
 
@@ -38,6 +40,16 @@ class Workload impl workload_api.IWorkload {
       chart: helmDir,
       values: ["image: ${image}"],
     );
+
+    if let port = props.port {
+      this.internalUrl = "http://${props.name}:${props.port}";
+    } else {
+      this.internalUrl = nil;
+    }
+  }
+
+  pub getInternalUrl(): str? {
+    return this.internalUrl;
   }
 
   pub inflight start() {
@@ -61,7 +73,9 @@ class _Chart extends workload_cdk8s.Chart {
     let envVariables = MutMap<workload_plus.EnvValue>{};
 
     for k in env.keys() {
-      envVariables.set(k, workload_plus.EnvValue.fromValue(env.get(k)));
+      if let v = env.get(k) {
+        envVariables.set(k, workload_plus.EnvValue.fromValue(v));
+      }
     }
 
     let ports = MutArray<workload_plus.ContainerPort>[];

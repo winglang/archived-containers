@@ -6,6 +6,7 @@ bring "./utils.w" as utils;
 
 class Workload impl api.IWorkload {
   inner: api.IWorkload;
+  pub internalUrl: str?;
 
   init(props: api.WorkloadProps) {
     let target = util.env("WING_TARGET");
@@ -17,6 +18,8 @@ class Workload impl api.IWorkload {
     } else {
       throw "unsupported target ${target}";
     }
+
+    this.internalUrl = this.inner.getInternalUrl();
 
     std.Node.of(this.inner).hidden = true;
   }
@@ -31,5 +34,9 @@ class Workload impl api.IWorkload {
 
   pub inflight url(): str? {
     return this.inner.url();
+  }
+
+  pub getInternalUrl(): str? {
+    return this.inner.getInternalUrl();
   }
 }
