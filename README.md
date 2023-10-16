@@ -105,10 +105,12 @@ Slack](https://t.winglang.io).
 - [ ] Use a `cloud.Redis` database
 - [ ] Implement `cloud.Service` using containers.
 - [x] Reference workload from another workload (without going through the load balancer) - Microservice example.
-- [ ] Publish the library
-- [ ] `url()` and `internalUrl()` or something like this.
-- [ ] Enable logging (`Disabled logging because aws-logging configmap was not found. configmap
+- [ ] `internalUrl()` in the simulator.
+- [ ] `publicUrl()`
+- [ ] Logging in `tf-aws` (`Disabled logging because aws-logging configmap was not found. configmap
   "aws-logging" not found`).
+- [ ] Logging in `sim`.
+- [ ] Publish the library
 - [x] Generate helm charts under target directory
 - [ ] Implement `start()` and `stop()`.
 - [ ] Sidecar containers
