@@ -11,6 +11,7 @@ class Workload impl api.IWorkload {
   props: api.WorkloadProps;
   appDir: str;
   imageTag: str;
+  public: bool;
   
   init(props: api.WorkloadProps) {
     this.appDir = utils.entrypointDir(this);
@@ -18,17 +19,17 @@ class Workload impl api.IWorkload {
 
     this.bucket = new cloud.Bucket();
     let hash = utils.resolveContentHash(this, props);
-    this.imageTag = "${props.name}-${hash}";
-    this.containerId = this.imageTag;
+    this.imageTag = "${props.name}:${hash}";
+    this.containerId = "${props.name}-${hash}";
+    this.public = props.public ?? false;
 
     this.urlKey = "url";
 
-    let svc = new cloud.Service(inflight () => {
+    new cloud.Service(inflight () => {
       this.start();
-      return () => {
-        this.stop();
-      };
+      return () => { this.stop(); };
     });
+  }
 
     std.Node.of(this).title = props.image;
     std.Node.of(this.bucket).hidden = true;
@@ -88,6 +89,7 @@ class Workload impl api.IWorkload {
     }
 
     log("starting container ${this.containerId}");
+    log("docker ${dockerRun.join(" ")}");
     utils.shell("docker", dockerRun.copy());
 
     let out = Json.parse(utils.shell("docker", ["inspect", this.containerId]));
@@ -122,5 +124,5 @@ class Workload impl api.IWorkload {
 
   pub inflight url(): str? {
     return this.bucket.tryGet(this.urlKey);
-  }  
+  }
 }

@@ -55,7 +55,13 @@ class Repository {
     let image = "${r.repositoryUrl}:${props.tag}";
     let arch = "linux/amd64";
 
-    new ecr_null.provider.NullProvider();
+
+    // null provider singleton
+    let stack = ecr_cdktf.TerraformStack.of(this);
+    let nullProviderId = "NullProvider";
+    if !stack.node.tryFindChild(nullProviderId)? {
+      new ecr_null.provider.NullProvider() as nullProviderId in stack;
+    }    
     
     let publish = new ecr_null.resource.Resource(
       dependsOn: [r],
