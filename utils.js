@@ -19,7 +19,12 @@ exports.shell = async function (command, args, cwd) {
 };
 
 exports.entrypointDir = function (scope) {
-  return scope.node.root.entrypointDir;
+  const entrypoint = wingsdk.core.App.of(scope).entrypointDir;
+  if (!entrypoint) {
+    throw new Error('Entrypoint directory not found');
+  }
+
+  return entrypoint;
 };
 
 exports.dirname = function() {

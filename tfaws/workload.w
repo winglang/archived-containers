@@ -15,8 +15,8 @@ class Workload impl workload_api.IWorkload {
     let var image = props.image;
     let var deps = MutArray<workload_cdktf.ITerraformDependable>[];
 
-    if props.image.startsWith("./") {
-      let hash = workload_utils.resolveContentHash(this, props);
+    if workload_utils.isPath(props.image) {
+      let hash = workload_utils.resolveContentHash(this, props) ?? props.image;
       let appDir = workload_utils.entrypointDir(this);
       let repository = new workload_ecr.Repository(
         name: props.name,

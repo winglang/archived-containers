@@ -6,13 +6,21 @@ class Util {
   extern "./utils.js" pub static entrypointDir(scope: std.IResource): str;
   extern "./utils.js" pub static dirname(): str;
 
-  pub static resolveContentHash(scope: std.IResource, props: utils_api.WorkloadProps): str {
-    if !props.image.startsWith("./") {
-      return props.image;
+  pub static isPath(s: str): bool {
+    return s.startsWith("/") || s.startsWith("./");
+  }
+
+  pub static inflight isPathInflight(s: str): bool {
+    return s.startsWith("/") || s.startsWith("./");
+  }
+
+  pub static resolveContentHash(scope: std.IResource, props: utils_api.WorkloadProps): str? {
+    if !Util.isPath(props.image) {
+      return nil;
     }
     
     let sources = props.sources ?? ["**/*"];
-    let imageDir = Util.entrypointDir(scope) + "/" + props.image;
+    let imageDir = props.image;
     return props.sourceHash ?? Util.contentHash(sources, imageDir);
   }
 }

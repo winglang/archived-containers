@@ -22,8 +22,14 @@ class Workload impl api.IWorkload {
     this.state = new sim.State();
 
     let hash = utils.resolveContentHash(this, props);
-    this.imageTag = "${props.name}:${hash}";
-    this.containerId = "${props.name}-${hash}";
+    if hash? {
+      this.imageTag = "${props.name}:${hash}";
+      this.containerId = "${props.name}-${hash}";
+    } else {
+      this.imageTag = props.image;
+      this.containerId = props.name;
+    }
+
     this.public = props.public ?? false;
     this.publicUrlKey = "public_url";
     this.internalUrlKey = "internal_url";
@@ -48,7 +54,7 @@ class Workload impl api.IWorkload {
     let opts = this.props;
 
     // if this a reference to a local directory, build the image from a docker file
-    if opts.image.startsWith("./") {
+    if utils.isPathInflight(opts.image) {
       // check if the image is already built
       try {
         utils.shell("docker", ["inspect", this.imageTag]);
