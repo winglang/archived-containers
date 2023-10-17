@@ -22,7 +22,10 @@ const server = http.createServer((req, res) => {
     .catch(e => {
       console.error(e);
       res.statusCode = 500;
-      res.end(JSON.stringify({ error: e.message }));
+      res.end(JSON.stringify({ 
+        producer_url: PRODUCER_URL,
+        error: e.message 
+      }));
     });
 });
 

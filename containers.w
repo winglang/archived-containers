@@ -12,16 +12,14 @@ class Workload impl api.IWorkload {
     let target = util.env("WING_TARGET");
 
     if target == "sim" {
-      this.inner = new sim.Workload(props) as this.node.id;
+      this.inner = new sim.Workload(props) as "sim";
     } elif target == "tf-aws" {
-      this.inner = new aws.Workload(props) as this.node.id;
+      this.inner = new aws.Workload(props) as "tf-aws";
     } else {
       throw "unsupported target ${target}";
     }
 
     this.internalUrl = this.inner.getInternalUrl();
-
-    std.Node.of(this.inner).hidden = true;
   }
 
   pub inflight start() {

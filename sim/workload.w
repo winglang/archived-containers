@@ -1,29 +1,32 @@
 bring http;
 bring util;
 bring cloud;
+bring sim;
 bring "../api.w" as api;
 bring "../utils.w" as utils;
 
 class Workload impl api.IWorkload {
   containerId: str;
-  bucket: cloud.Bucket;
-  urlKey: str;
+  publicUrlKey: str;
+  internalUrlKey: str;
+
   props: api.WorkloadProps;
   appDir: str;
   imageTag: str;
   public: bool;
+  state: sim.State;
   
   init(props: api.WorkloadProps) {
     this.appDir = utils.entrypointDir(this);
     this.props = props;
+    this.state = new sim.State();
 
-    this.bucket = new cloud.Bucket();
     let hash = utils.resolveContentHash(this, props);
     this.imageTag = "${props.name}:${hash}";
     this.containerId = "${props.name}-${hash}";
     this.public = props.public ?? false;
-
-    this.urlKey = "url";
+    this.publicUrlKey = "public_url";
+    this.internalUrlKey = "internal_url";
 
     new cloud.Service(inflight () => {
       this.start();
@@ -32,7 +35,11 @@ class Workload impl api.IWorkload {
   }
 
   pub getInternalUrl(): str? {
-    throw "Not implemented";
+    if !this.props.port? {
+      return nil;
+    }
+
+    return this.state.token(this.internalUrlKey);
   }
 
   pub inflight start(): void {
@@ -99,11 +106,12 @@ class Workload impl api.IWorkload {
         throw "Container does not listen to port ${port}";
       }
 
-      let url = "http://localhost:${hostPort}";
-      this.bucket.put(this.urlKey, url);
+      let publicUrl = "http://localhost:${hostPort}";
+      this.state.set(this.publicUrlKey, publicUrl);
+      this.state.set(this.internalUrlKey, "http://host.docker.internal:${hostPort}");
 
       if let readiness = opts.readiness {
-        let readinessUrl = "${url}${readiness}";
+        let readinessUrl = "${publicUrl}${readiness}";
         log("waiting for container to be ready: ${readinessUrl}...");
         util.waitUntil(inflight () => {
           try {
@@ -122,6 +130,10 @@ class Workload impl api.IWorkload {
   }
 
   pub inflight url(): str? {
-    return this.bucket.tryGet(this.urlKey);
+    if !this.props.port? {
+      return nil;
+    }
+
+    return this.state.get(this.publicUrlKey).asStr();
   }
 }

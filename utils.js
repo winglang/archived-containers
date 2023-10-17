@@ -19,7 +19,7 @@ exports.shell = async function (command, args, cwd) {
 };
 
 exports.entrypointDir = function (scope) {
-  return wingsdk.core.App.of(scope).entrypointDir;
+  return scope.node.root.entrypointDir;
 };
 
 exports.dirname = function() {

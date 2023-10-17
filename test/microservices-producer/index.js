@@ -9,7 +9,7 @@ process.on('SIGINT', () => {
 const server = http.createServer((req, res) => {
   console.log(`request received: ${req.method} ${req.url}`);
   res.setHeader('Content-Type', 'application/json');
-  res.end(JSON.stringify({ result: 42 }));
+  res.end(JSON.stringify({ result: 12 }));
 });
 
 console.log('listening on port 4000');

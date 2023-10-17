@@ -16,5 +16,13 @@ let consumer = new containers.Workload(
   env: {
     PRODUCER_URL: producer.internalUrl,
   }
-);
+) as "consumer";
 
+new cloud.Function(inflight () => {
+  if let url = consumer.url() {
+    log("get ${url}...");
+    if let body = http.get(url).body {
+      log(body);
+    }
+  }
+}) as "send request";
