@@ -56,6 +56,12 @@ class Workload impl api.IWorkload {
     }
   }
 
+  pub getPublicUrl(): str? {
+    if let k = this.publicUrlKey {
+      return this.state.token(k);
+    }
+  }
+
   pub inflight start(): void {
     log("starting workload...");
 

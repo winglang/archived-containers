@@ -11,8 +11,8 @@ interface IWorkload extends std.IResource {
   /** internal url, `nil` if there is no exposed port */
   getInternalUrl(): str?;
 
-  // /** extern url, `nil` if there is no exposed port or if `public` is `false` */
-  // publicUrl(): str?;
+  /** extern url, `nil` if there is no exposed port or if `public` is `false` */
+  getPublicUrl(): str?;
 }
 
 struct ContainerOpts {

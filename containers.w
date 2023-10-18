@@ -7,6 +7,7 @@ bring "./utils.w" as utils;
 class Workload impl api.IWorkload {
   inner: api.IWorkload;
   pub internalUrl: str?;
+  pub publicUrl: str?;
 
   init(props: api.WorkloadProps) {
     let target = util.env("WING_TARGET");
@@ -20,6 +21,7 @@ class Workload impl api.IWorkload {
     }
 
     this.internalUrl = this.inner.getInternalUrl();
+    this.publicUrl = this.inner.getPublicUrl();
   }
 
   pub inflight start() {
@@ -36,5 +38,9 @@ class Workload impl api.IWorkload {
 
   pub getInternalUrl(): str? {
     return this.inner.getInternalUrl();
+  }
+
+  pub getPublicUrl(): str? {
+    return this.inner.getPublicUrl();
   }
 }
