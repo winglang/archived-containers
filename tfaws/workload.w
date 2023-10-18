@@ -70,14 +70,6 @@ class Workload impl workload_api.IWorkload {
   pub getInternalUrl(): str? {
     return this.internalUrl;
   }
-
-  pub inflight start() {
-    throw "Not implemented yet";
-  }
-
-  pub inflight stop() {
-    throw "Not implemented yet";
-  }
 }
 
 class _Chart extends workload_cdk8s.Chart {

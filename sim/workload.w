@@ -62,7 +62,7 @@ class Workload impl api.IWorkload {
     }
   }
 
-  pub inflight start(): void {
+  inflight start(): void {
     log("starting workload...");
 
     let opts = this.props;
@@ -150,16 +150,8 @@ class Workload impl api.IWorkload {
     }
   }
 
-  pub inflight stop() {
+  inflight stop() {
     log("stopping container");
     utils.shell("docker", ["rm", "-f", this.containerId]);
-  }
-
-  pub inflight url(): str? {
-    if let k = this.publicUrlKey {
-      return this.state.get(k).asStr();
-    } else {
-      return nil;
-    }
   }
 }

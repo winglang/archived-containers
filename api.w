@@ -1,10 +1,4 @@
 interface IWorkload extends std.IResource {
-  /** starts the container */
-  inflight start(): void;
-
-  /** stops the container */
-  inflight stop(): void;
-
   /** internal url, `nil` if there is no exposed port */
   getInternalUrl(): str?;
 

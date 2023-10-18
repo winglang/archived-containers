@@ -24,14 +24,6 @@ class Workload impl api.IWorkload {
     this.publicUrl = this.inner.getPublicUrl();
   }
 
-  pub inflight start() {
-    this.inner.start();
-  }
-
-  pub inflight stop() {
-    this.inner.stop();
-  }
-
   pub getInternalUrl(): str? {
     return this.inner.getInternalUrl();
   }
