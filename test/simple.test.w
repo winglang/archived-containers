@@ -11,8 +11,12 @@ let app = new containers.Workload(
   args: ["-text=bang_bang"],
 );
 
+new cloud.Function(inflight () => {
+  log(app.publicUrl ?? "no public url yet");
+}) as "get public url";
+
 test "http get" {
-  if let url = app.url() {
+  if let url = app.publicUrl {
     let response = http.get(url);
     log(response.body ?? "");
     if let body = response.body {

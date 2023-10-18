@@ -5,9 +5,6 @@ interface IWorkload extends std.IResource {
   /** stops the container */
   inflight stop(): void;
 
-  /** if `port` is specified, this includes the external url of the container */
-  inflight url(): str?;
-
   /** internal url, `nil` if there is no exposed port */
   getInternalUrl(): str?;
 

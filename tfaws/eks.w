@@ -17,9 +17,56 @@ struct ClusterAttributes {
 
 interface ICluster extends std.IResource {
   attributes(): ClusterAttributes;
+  kubernetesProvider(): eks_cdktf.TerraformProvider;
+  helmProvider(): eks_cdktf.TerraformProvider;
 }
 
-class ClusterRef impl ICluster {
+class ClusterBase impl ICluster {
+  pub attributes(): ClusterAttributes { throw "Not implemented"; }
+
+  pub kubernetesProvider(): eks_cdktf.TerraformProvider {
+    let stack = eks_cdktf.TerraformStack.of(this);
+    let singletonKey = "WingKubernetesProvider";
+    let attributes = this.attributes();
+    let existing = stack.node.tryFindChild(singletonKey);
+    if existing? {
+      return unsafeCast(existing);
+    }
+
+    // setup the "kubernetes" terraform provider
+    return new eks_kubernetes.provider.KubernetesProvider(
+      host: attributes.endpoint,
+      clusterCaCertificate: eks_cdktf.Fn.base64decode(attributes.certificate),
+      exec: {
+        apiVersion: "client.authentication.k8s.io/v1beta1",
+        args: ["eks", "get-token", "--cluster-name", attributes.name],
+        command: "aws",
+      }
+    ) as singletonKey in stack;
+  }
+
+  pub helmProvider(): eks_cdktf.TerraformProvider {
+    let stack = eks_cdktf.TerraformStack.of(this);
+    let singletonKey = "WingHelmProvider";
+    let attributes = this.attributes();
+    let existing = stack.node.tryFindChild(singletonKey);
+    if existing? {
+      return unsafeCast(existing);
+    }
+
+    return new eks_helm.provider.HelmProvider(kubernetes: {
+      host: attributes.endpoint,
+      clusterCaCertificate: eks_cdktf.Fn.base64decode(attributes.certificate),
+      exec: {
+        apiVersion: "client.authentication.k8s.io/v1beta1",
+        args: ["eks", "get-token", "--cluster-name", attributes.name],
+        command: "aws",
+      }
+    }) as singletonKey in stack;
+  }
+}
+
+class ClusterRef extends ClusterBase impl ICluster {
   _attributes: ClusterAttributes;
 
   init(attributes: ClusterAttributes) {
@@ -31,31 +78,7 @@ class ClusterRef impl ICluster {
   }
 }
 
-class HelmChart {
-  release: eks_helm.release.Release;
-
-  init(cluster: ICluster, release: eks_helm.release.ReleaseConfig) {
-    let stack = eks_cdktf.TerraformStack.of(this);
-    let singletonKey = "WingHelmProvider";
-    let attributes = cluster.attributes();
-    let existing = stack.node.tryFindChild(singletonKey);
-    if !existing? {
-      new eks_helm.provider.HelmProvider(kubernetes: {
-        host: attributes.endpoint,
-        clusterCaCertificate: eks_cdktf.Fn.base64decode(attributes.certificate),
-        exec: {
-          apiVersion: "client.authentication.k8s.io/v1beta1",
-          args: ["eks", "get-token", "--cluster-name", attributes.name],
-          command: "aws",
-        }
-      }) as singletonKey in stack;
-    }
-
-    this.release = new eks_helm.release.Release(release) as release.name;
-  }
-}
-
-class Cluster impl ICluster {
+class Cluster extends ClusterBase impl ICluster {
 
   /** singleton */
   pub static getOrCreate(scope: std.IResource): ICluster {
@@ -73,6 +96,7 @@ class Cluster impl ICluster {
 
     return existing ?? newCluster();
   }
+
 
   static tryGetClusterAttributes(): ClusterAttributes? {
     if !eks_values.has("eks.cluster_name") {
@@ -146,17 +170,6 @@ class Cluster impl ICluster {
 
     this._oidcProviderArn = cluster.get("oidc_provider_arn");
 
-    // setup the "kubernetes" terraform provider
-    new eks_kubernetes.provider.KubernetesProvider(
-      host: this._attributes.endpoint,
-      clusterCaCertificate: eks_cdktf.Fn.base64decode(this._attributes.certificate),
-      exec: {
-        apiVersion: "client.authentication.k8s.io/v1beta1",
-        args: ["eks", "get-token", "--cluster-name", this._attributes.name],
-        command: "aws",
-      }
-    );
-
     // output the cluster name
     new eks_cdktf.TerraformOutput(value: this._attributes.name, description: "eks.cluster_name") as "eks.cluster_name";
     new eks_cdktf.TerraformOutput(value: this._attributes.certificate, description: "eks.certificate") as "eks.certificate";
@@ -188,7 +201,10 @@ class Cluster impl ICluster {
       }
     ) as "lb_role";
 
+    // install the k8s terraform provider
+
     let serviceAccount = new eks_kubernetes.serviceAccount.ServiceAccount(
+      provider: this.kubernetesProvider(),
       metadata: {
         name: serviceAccountName,
         namespace: "kube-system",
@@ -202,8 +218,9 @@ class Cluster impl ICluster {
         },
       }
     );
-
-    new HelmChart(this, 
+    
+    new eks_helm.release.Release(
+      provider: this.helmProvider(),
       name: "aws-load-balancer-controller",
       repository: "https://aws.github.io/eks-charts",
       chart: "aws-load-balancer-controller",

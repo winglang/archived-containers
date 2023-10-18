@@ -32,10 +32,6 @@ class Workload impl api.IWorkload {
     this.inner.stop();
   }
 
-  pub inflight url(): str? {
-    return this.inner.url();
-  }
-
   pub getInternalUrl(): str? {
     return this.inner.getInternalUrl();
   }

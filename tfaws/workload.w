@@ -5,9 +5,12 @@ bring "cdk8s" as workload_cdk8s;
 bring "cdktf" as workload_cdktf;
 bring "./ecr.w" as workload_ecr;
 bring "../utils.w" as workload_utils;
+bring "@cdktf/provider-kubernetes" as workload_k8s;
+bring "@cdktf/provider-helm" as workload_helm;
 
 class Workload impl workload_api.IWorkload {
   internalUrl: str?;
+  publicUrl: str?;
 
   init(props: workload_api.WorkloadProps) {
     let cluster = workload_eks.Cluster.getOrCreate(this);
@@ -31,21 +34,37 @@ class Workload impl workload_api.IWorkload {
     }
 
     let chart = new _Chart(props);
-    let helmDir = chart.toHelm();
 
-    let helm = new workload_eks.HelmChart(
-      cluster,
+    let helm = new workload_helm.release.Release(
+      provider: cluster.helmProvider(),
       dependsOn: deps.copy(),
       name: props.name,
-      chart: helmDir,
+      chart: chart.toHelm(),
       values: ["image: ${image}"],
     );
 
     if let port = props.port {
       this.internalUrl = "http://${props.name}:${props.port}";
-    } else {
-      this.internalUrl = nil;
     }
+
+    // if "public" is set, lookup the address from the ingress resource created by the helm chart
+    // and assign to `publicUrl`.
+    if props.public ?? false {
+      let ingress = new workload_k8s.dataKubernetesIngressV1.DataKubernetesIngressV1(
+        provider: cluster.kubernetesProvider(),
+        dependsOn: [helm],
+        metadata: {
+          name: props.name
+        }
+      );
+
+      let hostname = ingress.status.get(0).loadBalancer.get(0).ingress.get(0).hostname;
+      this.publicUrl = "http://${hostname}";
+    }
+  }
+
+  pub getPublicUrl(): str? {
+    return this.publicUrl;
   }
 
   pub getInternalUrl(): str? {
@@ -57,10 +76,6 @@ class Workload impl workload_api.IWorkload {
   }
 
   pub inflight stop() {
-    throw "Not implemented yet";
-  }
-
-  pub inflight url(): str? {
     throw "Not implemented yet";
   }
 }
