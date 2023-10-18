@@ -7,8 +7,8 @@ bring "../utils.w" as utils;
 
 class Workload impl api.IWorkload {
   containerId: str;
-  publicUrlKey: str;
-  internalUrlKey: str;
+  publicUrlKey: str?;
+  internalUrlKey: str?;
 
   props: api.WorkloadProps;
   appDir: str;
@@ -31,8 +31,18 @@ class Workload impl api.IWorkload {
     }
 
     this.public = props.public ?? false;
-    this.publicUrlKey = "public_url";
-    this.internalUrlKey = "internal_url";
+
+    if this.public {
+      if !props.port? {
+        throw "'port' is required if 'public' is enabled";
+      }
+
+      this.publicUrlKey = "public_url";
+    }
+
+    if props.port? {
+      this.internalUrlKey = "internal_url";
+    }
 
     new cloud.Service(inflight () => {
       this.start();
@@ -41,11 +51,9 @@ class Workload impl api.IWorkload {
   }
 
   pub getInternalUrl(): str? {
-    if !this.props.port? {
-      return nil;
+    if let k = this.internalUrlKey {
+      return this.state.token(k);
     }
-
-    return this.state.token(this.internalUrlKey);
   }
 
   pub inflight start(): void {
@@ -113,8 +121,14 @@ class Workload impl api.IWorkload {
       }
 
       let publicUrl = "http://localhost:${hostPort}";
-      this.state.set(this.publicUrlKey, publicUrl);
-      this.state.set(this.internalUrlKey, "http://host.docker.internal:${hostPort}");
+
+      if let k = this.publicUrlKey {
+        this.state.set(k, publicUrl);
+      }
+
+      if let k = this.internalUrlKey {
+        this.state.set(k, "http://host.docker.internal:${hostPort}");
+      }
 
       if let readiness = opts.readiness {
         let readinessUrl = "${publicUrl}${readiness}";
@@ -136,10 +150,10 @@ class Workload impl api.IWorkload {
   }
 
   pub inflight url(): str? {
-    if !this.props.port? {
+    if let k = this.publicUrlKey {
+      return this.state.get(k).asStr();
+    } else {
       return nil;
     }
-
-    return this.state.get(this.publicUrlKey).asStr();
   }
 }
