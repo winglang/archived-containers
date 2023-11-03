@@ -9,7 +9,7 @@
   "main": "index.js",
   "scripts": {
     "test": "wing test test/*.test.w",
-    "pack": "wing pack",
+    "pack": "mkdir -p @winglibs && wing pack && mv @winglibs/*.tgz . && rm -rf @winglibs",
     "build": "npm test && npm run pack"
   },
   "author": {
