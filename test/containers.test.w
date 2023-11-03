@@ -16,7 +16,7 @@ let hello = new containers.Workload(
   public: true,
 ) as "hello";
 
-new containers.Workload(
+let echo = new containers.Workload(
   name: "http-echo",
   image: "hashicorp/http-echo",
   port: 5678,
@@ -25,14 +25,20 @@ new containers.Workload(
   args: ["-text=hello1234"],
 ) as "http-echo";
 
-let tryGetBody = inflight (): str? => {
+let httpGet = inflight (url: str?): str => {
+  if let url = url {
+    if let body = http.get(url).body {
+      return body;
+    }
+  }
+
+  throw "no body";
 };
 
-test "ping" {
-  if let url = hello.publicUrl {
-    let body = http.get(url).body;
-    assert(body?.contains(message) ?? false);
-  } else {
-    assert(false);
-  }
+test "access public url" {
+  let helloBody = httpGet(hello.publicUrl);
+  assert(helloBody.contains(message));
+
+  let echoBody = httpGet(echo.publicUrl);
+  assert(echoBody.contains("hello1234"));
 }
