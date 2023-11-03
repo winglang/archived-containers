@@ -2,6 +2,11 @@
   "name": "@winglibs/containers",
   "version": "0.0.1",
   "description": "Wing container support",
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org",
+    "tag": "latest"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/eladb/wing-containers.git"
