@@ -7,15 +7,15 @@ This library allows deploying arbitrary containers with Wing.
 Use `npm` to install this library:
 
 ```sh
-npm i wing-containers
+npm i @winglibs/containers
 ```
 
 ## Bring it
 
-The `Workload` resource represents a containerized workload.
+The `containers.Workload` resource represents a containerized workload.
 
 ```js
-bring "wing-containers" as containers;
+bring containers;
 
 new containers.Workload(
   name: "hello",

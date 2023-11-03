@@ -1,6 +1,6 @@
 {
   "name": "@winglibs/containers",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Wing container support",
   "publishConfig": {
     "access": "public",

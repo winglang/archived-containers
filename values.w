@@ -2,7 +2,7 @@ bring util;
 bring fs;
 bring "./utils.w" as utils;
 
-pub class Util {
+pub class Values {
   pub static all(): Map<str> {
     let all = MutMap<str>{};
 
@@ -35,15 +35,15 @@ pub class Util {
   }
 
   pub static tryGet(key: str): str? {
-    return Util.all().tryGet(key);
+    return Values.all().tryGet(key);
   }
 
   pub static has(key: str): bool {
-    return Util.tryGet(key)?;
+    return Values.tryGet(key)?;
   }
 
   pub static get(key: str): str {
-    if let value = Util.tryGet(key) {
+    if let value = Values.tryGet(key) {
       return value;
     } else {
       throw "Missing platform value '${key}' (use --values or -v)";

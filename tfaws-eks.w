@@ -98,14 +98,14 @@ pub class Cluster extends ClusterBase impl ICluster {
 
 
   static tryGetClusterAttributes(): ClusterAttributes? {
-    if !values.has("eks.cluster_name") {
+    if !values.Values.has("eks.cluster_name") {
       return nil;
     }
 
     return ClusterAttributes {
-      name: values.get("eks.cluster_name"),
-      certificate: values.get("eks.certificate"),
-      endpoint: values.get("eks.endpoint"),
+      name: values.Values.get("eks.cluster_name"),
+      certificate: values.Values.get("eks.certificate"),
+      endpoint: values.Values.get("eks.endpoint"),
     };
 
   }
