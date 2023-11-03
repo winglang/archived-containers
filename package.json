@@ -1,10 +1,16 @@
 {
-  "name": "wing-containers",
-  "version": "1.0.0",
-  "description": "A containers library for Wing",
+  "name": "@winglibs/containers",
+  "version": "0.0.1",
+  "description": "Wing container support",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/eladb/wing-containers.git"
+  },  
   "main": "index.js",
   "scripts": {
-    "build": "wing compile ."
+    "test": "wing test test/*.test.w",
+    "pack": "wing pack",
+    "build": "npm test && npm run pack"
   },
   "author": {
     "email": "eladb@wing.cloud",
