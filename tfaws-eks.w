@@ -4,7 +4,7 @@ bring "constructs" as c;
 bring "cdktf" as cdktf;
 bring "@cdktf/provider-helm" as helm;
 bring "@cdktf/provider-kubernetes" as eks;
-bring "./vpc.w" as vpc;
+bring "./tfaws-vpc.w" as vpc;
 bring "./values.w" as values;
 bring "./aws.w" as aws_info;
 

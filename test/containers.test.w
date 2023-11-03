@@ -1,4 +1,4 @@
-bring "../containers.w" as containers;
+bring "../workload.w" as containers;
 bring expect;
 bring http;
 

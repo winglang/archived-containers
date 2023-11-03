@@ -22,6 +22,9 @@
     "name": "Elad Ben-Israel"
   },
   "license": "MIT",
+  "peerDependencies": {
+    "winglang": "^0.44.3"
+  },
   "dependencies": {
     "@cdktf/provider-aws": "^17.0.9",
     "@cdktf/provider-docker": "^9.0.0",
@@ -29,8 +32,6 @@
     "@cdktf/provider-kubernetes": "^9.0.0",
     "@cdktf/provider-null": "^8.0.0",
     "cdk8s-plus-27": "^2.7.33",
-    "cdktf": "^0.18.2",
-    "glob": "^10.3.10",
-    "winglang": "^0.44.3"
+    "cdktf": "^0.18.2"
   }
 }

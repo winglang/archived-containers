@@ -1,10 +1,10 @@
-bring "../api.w" as api;
-bring "./eks.w" as eks;
+bring "./api.w" as api;
+bring "./tfaws-eks.w" as eks;
 bring "cdk8s-plus-27" as plus;
 bring "cdk8s" as cdk8s;
 bring "cdktf" as cdktf;
-bring "./ecr.w" as ecr;
-bring "../utils.w" as utils;
+bring "./tfaws-ecr.w" as ecr;
+bring "./utils.w" as utils;
 bring "@cdktf/provider-kubernetes" as k8s;
 bring "@cdktf/provider-helm" as helm;
 
@@ -114,7 +114,7 @@ pub class Workload impl api.IWorkload {
         return _Chart.toHelmChart(this);
       }
     
-      extern "./util.js" pub static toHelmChart(chart: cdk8s.Chart): str;
+      extern "./helm.js" pub static toHelmChart(chart: cdk8s.Chart): str;
     }
     
 

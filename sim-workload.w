@@ -2,8 +2,8 @@ bring http;
 bring util;
 bring cloud;
 bring sim;
-bring "../api.w" as api;
-bring "../utils.w" as utils;
+bring "./api.w" as api;
+bring "./utils.w" as utils;
 
 pub class Workload impl api.IWorkload {
   containerId: str;
