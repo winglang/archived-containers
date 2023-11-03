@@ -8,7 +8,7 @@ bring "./utils.w" as utils;
 bring "@cdktf/provider-kubernetes" as k8s;
 bring "@cdktf/provider-helm" as helm;
 
-pub class Workload impl api.IWorkload {
+pub class Workload_tfaws impl api.IWorkload {
   internalUrl: str?;
   publicUrl: str?;
 

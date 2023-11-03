@@ -1,6 +1,6 @@
 bring util;
-bring "./sim-workload.w" as sim;
-bring "./tfaws-workload.w" as aws;
+bring "./workload.sim.w" as sim;
+bring "./workload.tfaws.w" as tfaws;
 bring "./api.w" as api;
 bring "./utils.w" as utils;
 
@@ -13,9 +13,9 @@ pub class Workload impl api.IWorkload {
     let target = util.env("WING_TARGET");
 
     if target == "sim" {
-      this.inner = new sim.Workload(props) as "sim";
+      this.inner = new sim.Workload_sim(props) as "sim";
     } elif target == "tf-aws" {
-      this.inner = new aws.Workload(props) as "tf-aws";
+      this.inner = new tfaws.Workload_tfaws(props) as "tf-aws";
     } else {
       throw "unsupported target ${target}";
     }
