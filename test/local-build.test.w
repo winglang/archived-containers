@@ -9,7 +9,7 @@ let app = new containers.Workload(
 );
 
 test "can access container" {
-  let response = http.get("${app.url()}");
+  let response = http.get("${app.publicUrl}");
   if let body = response.body {
     log(body);
   }
