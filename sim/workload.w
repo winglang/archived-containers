@@ -5,7 +5,7 @@ bring sim;
 bring "../api.w" as api;
 bring "../utils.w" as utils;
 
-class Workload impl api.IWorkload {
+pub class Workload impl api.IWorkload {
   containerId: str;
   publicUrlKey: str?;
   internalUrlKey: str?;

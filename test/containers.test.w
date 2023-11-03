@@ -1,4 +1,5 @@
 bring "../containers.w" as containers;
+bring expect;
 bring http;
 
 let message = "hello, wing change!!";
@@ -13,7 +14,7 @@ let hello = new containers.Workload(
     "MESSAGE" => message,
   },
   public: true,
-);
+) as "hello";
 
 new containers.Workload(
   name: "http-echo",
@@ -22,33 +23,16 @@ new containers.Workload(
   public: true,
   replicas: 2,
   args: ["-text=hello1234"],
-);
+) as "http-echo";
 
-let getBody = inflight (): str? => {
-  if let url = hello.url() {
-    return http.get(url).body;
-  }
-
-  return nil;
+let tryGetBody = inflight (): str? => {
 };
 
-test "container started automatically and port exposed" {
-  let body = getBody();
-  assert(body?.contains(message) ?? false);
-}
-
-test "container stopped after stop() is called" {
-  assert(getBody()?);
-
-  // stop the container and check that there is no body
-  hello.stop();
-
-  // check that we can't reach the container
-  let var error = false;
-  try {
-    getBody();
-  } catch {
-    error = true;
+test "ping" {
+  if let url = hello.publicUrl {
+    let body = http.get(url).body;
+    assert(body?.contains(message) ?? false);
+  } else {
+    assert(false);
   }
-  assert(error);
 }

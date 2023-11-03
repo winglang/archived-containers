@@ -1,8 +1,8 @@
 bring util;
 bring fs;
-bring "../utils.w" as values_utils;
+bring "../utils.w" as utils;
 
-class Util {
+pub class Util {
   pub static all(): Map<str> {
     let all = MutMap<str>{};
 

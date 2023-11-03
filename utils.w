@@ -1,6 +1,6 @@
-bring "./api.w" as utils_api;
+bring "./api.w" as api;
 
-class Util {
+pub class Util {
   extern "./utils.js" pub static inflight shell(command: str, args: Array<str>, cwd: str?): str;
   extern "./utils.js" pub static contentHash(files: Array<str>, cwd: str): str;
   extern "./utils.js" pub static entrypointDir(scope: std.IResource): str;
@@ -14,7 +14,7 @@ class Util {
     return s.startsWith("/") || s.startsWith("./");
   }
 
-  pub static resolveContentHash(scope: std.IResource, props: utils_api.WorkloadProps): str? {
+  pub static resolveContentHash(scope: std.IResource, props: api.WorkloadProps): str? {
     if !Util.isPath(props.image) {
       return nil;
     }

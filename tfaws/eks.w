@@ -1,13 +1,12 @@
 bring aws;
 bring cloud;
 bring "constructs" as c;
-bring "cdktf" as eks_cdktf;
-bring "@cdktf/provider-aws" as eks_aws;
-bring "@cdktf/provider-helm" as eks_helm;
-bring "@cdktf/provider-kubernetes" as eks_kubernetes;
-bring "./vpc.w" as eks_vpc;
-bring "./values.w" as eks_values;
-bring "./aws.w" as eks_aws_info;
+bring "cdktf" as cdktf;
+bring "@cdktf/provider-helm" as helm;
+bring "@cdktf/provider-kubernetes" as eks;
+bring "./vpc.w" as vpc;
+bring "./values.w" as values;
+bring "./aws.w" as aws_info;
 
 struct ClusterAttributes {
   name: str;
@@ -17,15 +16,15 @@ struct ClusterAttributes {
 
 interface ICluster extends std.IResource {
   attributes(): ClusterAttributes;
-  kubernetesProvider(): eks_cdktf.TerraformProvider;
-  helmProvider(): eks_cdktf.TerraformProvider;
+  kubernetesProvider(): cdktf.TerraformProvider;
+  helmProvider(): cdktf.TerraformProvider;
 }
 
-class ClusterBase impl ICluster {
+pub class ClusterBase impl ICluster {
   pub attributes(): ClusterAttributes { throw "Not implemented"; }
 
-  pub kubernetesProvider(): eks_cdktf.TerraformProvider {
-    let stack = eks_cdktf.TerraformStack.of(this);
+  pub kubernetesProvider(): cdktf.TerraformProvider {
+    let stack = cdktf.TerraformStack.of(this);
     let singletonKey = "WingKubernetesProvider";
     let attributes = this.attributes();
     let existing = stack.node.tryFindChild(singletonKey);
@@ -34,9 +33,9 @@ class ClusterBase impl ICluster {
     }
 
     // setup the "kubernetes" terraform provider
-    return new eks_kubernetes.provider.KubernetesProvider(
+    return new eks.provider.KubernetesProvider(
       host: attributes.endpoint,
-      clusterCaCertificate: eks_cdktf.Fn.base64decode(attributes.certificate),
+      clusterCaCertificate: cdktf.Fn.base64decode(attributes.certificate),
       exec: {
         apiVersion: "client.authentication.k8s.io/v1beta1",
         args: ["eks", "get-token", "--cluster-name", attributes.name],
@@ -45,8 +44,8 @@ class ClusterBase impl ICluster {
     ) as singletonKey in stack;
   }
 
-  pub helmProvider(): eks_cdktf.TerraformProvider {
-    let stack = eks_cdktf.TerraformStack.of(this);
+  pub helmProvider(): cdktf.TerraformProvider {
+    let stack = cdktf.TerraformStack.of(this);
     let singletonKey = "WingHelmProvider";
     let attributes = this.attributes();
     let existing = stack.node.tryFindChild(singletonKey);
@@ -54,9 +53,9 @@ class ClusterBase impl ICluster {
       return unsafeCast(existing);
     }
 
-    return new eks_helm.provider.HelmProvider(kubernetes: {
+    return new helm.provider.HelmProvider(kubernetes: {
       host: attributes.endpoint,
-      clusterCaCertificate: eks_cdktf.Fn.base64decode(attributes.certificate),
+      clusterCaCertificate: cdktf.Fn.base64decode(attributes.certificate),
       exec: {
         apiVersion: "client.authentication.k8s.io/v1beta1",
         args: ["eks", "get-token", "--cluster-name", attributes.name],
@@ -78,11 +77,11 @@ class ClusterRef extends ClusterBase impl ICluster {
   }
 }
 
-class Cluster extends ClusterBase impl ICluster {
+pub class Cluster extends ClusterBase impl ICluster {
 
   /** singleton */
   pub static getOrCreate(scope: std.IResource): ICluster {
-    let stack = eks_cdktf.TerraformStack.of(scope);
+    let stack = cdktf.TerraformStack.of(scope);
     let uid = "WingEksCluster";
     let existing: ICluster? = unsafeCast(stack.node.tryFindChild(uid));
     let newCluster = (): ICluster => {
@@ -99,14 +98,14 @@ class Cluster extends ClusterBase impl ICluster {
 
 
   static tryGetClusterAttributes(): ClusterAttributes? {
-    if !eks_values.has("eks.cluster_name") {
+    if !values.has("eks.cluster_name") {
       return nil;
     }
 
     return ClusterAttributes {
-      name: eks_values.get("eks.cluster_name"),
-      certificate: eks_values.get("eks.certificate"),
-      endpoint: eks_values.get("eks.endpoint"),
+      name: values.get("eks.cluster_name"),
+      certificate: values.get("eks.certificate"),
+      endpoint: values.get("eks.endpoint"),
     };
 
   }
@@ -114,7 +113,7 @@ class Cluster extends ClusterBase impl ICluster {
   _attributes: ClusterAttributes;
   _oidcProviderArn: str;
 
-  vpc: eks_vpc.Vpc;
+  vpc: vpc.Vpc;
 
   init(clusterName: str) {
     let privateSubnetTags = MutMap<str>{};
@@ -125,12 +124,12 @@ class Cluster extends ClusterBase impl ICluster {
     publicSubnetTags.set("kubernetes.io/role/elb", "1");
     publicSubnetTags.set("kubernetes.io/cluster/${clusterName}", "shared");
 
-    this.vpc = new eks_vpc.Vpc(
+    this.vpc = new vpc.Vpc(
       privateSubnetTags: privateSubnetTags.copy(),
       publicSubnetTags: publicSubnetTags.copy(),
     );
 
-    let cluster = new eks_cdktf.TerraformHclModule(
+    let cluster = new cdktf.TerraformHclModule(
       source: "terraform-aws-modules/eks/aws",
       version: "19.17.1",
       variables: {
@@ -141,7 +140,7 @@ class Cluster extends ClusterBase impl ICluster {
           "kube-proxy": {},
           "vpc-cni": {},
           coredns: {
-            configuration_values: eks_cdktf.Fn.jsonencode({
+            configuration_values: cdktf.Fn.jsonencode({
               computeType: "Fargate"
             })
           },
@@ -171,9 +170,9 @@ class Cluster extends ClusterBase impl ICluster {
     this._oidcProviderArn = cluster.get("oidc_provider_arn");
 
     // output the cluster name
-    new eks_cdktf.TerraformOutput(value: this._attributes.name, description: "eks.cluster_name") as "eks.cluster_name";
-    new eks_cdktf.TerraformOutput(value: this._attributes.certificate, description: "eks.certificate") as "eks.certificate";
-    new eks_cdktf.TerraformOutput(value: this._attributes.endpoint, description: "eks.endpoint") as "eks.endpoint";
+    new cdktf.TerraformOutput(value: this._attributes.name, description: "eks.cluster_name") as "eks.cluster_name";
+    new cdktf.TerraformOutput(value: this._attributes.certificate, description: "eks.certificate") as "eks.certificate";
+    new cdktf.TerraformOutput(value: this._attributes.endpoint, description: "eks.endpoint") as "eks.endpoint";
 
     // install the LB controller to support ingress
     this.addLoadBalancerController();
@@ -184,10 +183,10 @@ class Cluster extends ClusterBase impl ICluster {
   }
 
   addLoadBalancerController() {
-    let awsInfo = eks_aws_info.Aws.getOrCreate(this);
+    let awsInfo = aws_info.Aws.getOrCreate(this);
 
     let serviceAccountName = "aws-load-balancer-controller";
-    let lbRole = new eks_cdktf.TerraformHclModule(
+    let lbRole = new cdktf.TerraformHclModule(
       source: "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks",
       variables: {
         role_name: "eks-lb-role-${this.node.addr}",
@@ -203,7 +202,7 @@ class Cluster extends ClusterBase impl ICluster {
 
     // install the k8s terraform provider
 
-    let serviceAccount = new eks_kubernetes.serviceAccount.ServiceAccount(
+    let serviceAccount = new eks.serviceAccount.ServiceAccount(
       provider: this.kubernetesProvider(),
       metadata: {
         name: serviceAccountName,
@@ -219,7 +218,7 @@ class Cluster extends ClusterBase impl ICluster {
       }
     );
     
-    new eks_helm.release.Release(
+    new helm.release.Release(
       provider: this.helmProvider(),
       name: "aws-load-balancer-controller",
       repository: "https://aws.github.io/eks-charts",

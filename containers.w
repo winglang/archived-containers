@@ -4,7 +4,7 @@ bring "./tfaws" as aws;
 bring "./api.w" as api;
 bring "./utils.w" as utils;
 
-class Workload impl api.IWorkload {
+pub class Workload impl api.IWorkload {
   inner: api.IWorkload;
   pub internalUrl: str?;
   pub publicUrl: str?;

@@ -1,7 +1,7 @@
-bring "@cdktf/provider-aws" as ecr_aws;
-bring "cdktf" as ecr_cdktf;
-bring "@cdktf/provider-null" as ecr_null;
-bring "./aws.w" as ecr_aws_info;
+bring "@cdktf/provider-aws" as aws;
+bring "cdktf" as cdktf;
+bring "@cdktf/provider-null" as null_provider;
+bring "./aws.w" as aws_info;
 
 struct RepositoryProps {
   directory: str;
@@ -9,16 +9,16 @@ struct RepositoryProps {
   tag: str;
 }
 
-class Repository {
+pub class Repository {
   pub image: str;
-  pub deps: Array<ecr_cdktf.ITerraformDependable>;
+  pub deps: Array<cdktf.ITerraformDependable>;
 
   init(props: RepositoryProps) {
-    let deps = MutArray<ecr_cdktf.ITerraformDependable>[];
+    let deps = MutArray<cdktf.ITerraformDependable>[];
 
     let count = 5;
 
-    let r = new ecr_aws.ecrRepository.EcrRepository(
+    let r = new aws.ecrRepository.EcrRepository(
       name: props.name,
       forceDelete: true,
       imageTagMutability: "IMMUTABLE",
@@ -29,7 +29,7 @@ class Repository {
 
     deps.push(r);
     
-    new ecr_aws.ecrLifecyclePolicy.EcrLifecyclePolicy(
+    new aws.ecrLifecyclePolicy.EcrLifecyclePolicy(
       repository: r.name,
       policy: Json.stringify({
         rules: [
@@ -49,7 +49,7 @@ class Repository {
       })
     );
 
-    let awsInfo = ecr_aws_info.Aws.getOrCreate(this);
+    let awsInfo = aws_info.Aws.getOrCreate(this);
     let region = awsInfo.region();
     let accountId = awsInfo.accountId();
     let image = "${r.repositoryUrl}:${props.tag}";
@@ -57,13 +57,13 @@ class Repository {
 
 
     // null provider singleton
-    let stack = ecr_cdktf.TerraformStack.of(this);
+    let stack = cdktf.TerraformStack.of(this);
     let nullProviderId = "NullProvider";
     if !stack.node.tryFindChild(nullProviderId)? {
-      new ecr_null.provider.NullProvider() as nullProviderId in stack;
+      new null_provider.provider.NullProvider() as nullProviderId in stack;
     }    
     
-    let publish = new ecr_null.resource.Resource(
+    let publish = new null_provider.resource.Resource(
       dependsOn: [r],
       triggers: {
         tag: image,

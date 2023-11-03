@@ -1,4 +1,4 @@
-interface IWorkload extends std.IResource {
+pub interface IWorkload extends std.IResource {
   /** internal url, `nil` if there is no exposed port */
   getInternalUrl(): str?;
 
@@ -6,7 +6,7 @@ interface IWorkload extends std.IResource {
   getPublicUrl(): str?;
 }
 
-struct ContainerOpts {
+pub struct ContainerOpts {
   name: str;
   image: str;
   port: num?;
@@ -30,6 +30,6 @@ struct ContainerOpts {
   sourceHash: str?;
 }
 
-struct WorkloadProps extends ContainerOpts {
+pub struct WorkloadProps extends ContainerOpts {
 
 }
