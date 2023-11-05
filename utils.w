@@ -1,4 +1,5 @@
 bring "./api.w" as api;
+bring fs;
 
 pub class Util {
   extern "./utils.js" pub static inflight shell(command: str, args: Array<str>, cwd: str?): str;

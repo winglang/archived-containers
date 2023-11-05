@@ -1,7 +1,6 @@
 const child_process = require("child_process");
 const fs = require('fs');
 const crypto = require('crypto');
-const wingsdk = require('@winglang/sdk');
 const glob = require('glob');
 const path = require('path');
 
@@ -32,7 +31,7 @@ exports.dirname = function() {
 
 exports.contentHash = function(patterns, cwd) {
   const hash = crypto.createHash('md5');
-  const files = glob.globSync(patterns, { nodir: true, cwd });
+  const files = glob.sync(patterns, { nodir: true, cwd });
   for (const f of files) {
     const data = fs.readFileSync(path.join(cwd, f));
     hash.update(data);
