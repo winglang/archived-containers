@@ -10,7 +10,7 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/eladb/wing-containers.git"
-  },  
+  },
   "main": "index.js",
   "scripts": {
     "test": "wing test test/*.test.w",
@@ -31,7 +31,9 @@
     "@cdktf/provider-helm": "^8.0.1",
     "@cdktf/provider-kubernetes": "^9.0.0",
     "@cdktf/provider-null": "^8.0.0",
+    "@winglibs/containers": "^0.0.6",
     "cdk8s-plus-27": "^2.7.33",
-    "cdktf": "^0.18.2"
+    "cdktf": "^0.18.2",
+    "glob": "^10.3.10"
   }
 }
