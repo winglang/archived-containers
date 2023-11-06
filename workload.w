@@ -13,13 +13,14 @@ pub class Workload impl api.IWorkload {
     let target = util.env("WING_TARGET");
 
     if target == "sim" {
-      this.inner = new sim.Workload_sim(props) as "sim";
+      this.inner = new sim.Workload_sim(props) as props.name;
     } elif target == "tf-aws" {
-      this.inner = new tfaws.Workload_tfaws(props) as "tf-aws";
+      this.inner = new tfaws.Workload_tfaws(props) as props.name;
     } else {
       throw "unsupported target ${target}";
     }
 
+    
     this.internalUrl = this.inner.getInternalUrl();
     this.publicUrl = this.inner.getPublicUrl();
   }

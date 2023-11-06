@@ -44,10 +44,13 @@ pub class Workload_sim impl api.IWorkload {
       this.internalUrlKey = "internal_url";
     }
 
-    new cloud.Service(inflight () => {
+    let s = new cloud.Service(inflight () => {
       this.start();
       return () => { this.stop(); };
     });
+
+    std.Node.of(s).hidden = true;
+    std.Node.of(this.state).hidden = true;
   }
 
   pub getInternalUrl(): str? {
