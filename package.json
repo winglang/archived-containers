@@ -14,7 +14,7 @@
   "main": "index.js",
   "scripts": {
     "test": "wing test test/*.test.w",
-    "pack": "mkdir -p @winglibs && wing pack && mv @winglibs/*.tgz . && rm -rf @winglibs",
+    "pack": "wing pack",
     "build": "npm test && npm run pack"
   },
   "author": {
