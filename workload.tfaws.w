@@ -120,7 +120,7 @@ pub class Workload_tfaws impl api.IWorkload {
 
     let chart = new _Chart(props);
 
-    let helm = new helm.release.Release(
+    let release = new helm.release.Release(
       provider: cluster.helmProvider(),
       dependsOn: deps.copy(),
       name: props.name,
@@ -137,7 +137,7 @@ pub class Workload_tfaws impl api.IWorkload {
     if props.public ?? false {
       let ingress = new k8s.dataKubernetesIngressV1.DataKubernetesIngressV1(
         provider: cluster.kubernetesProvider(),
-        dependsOn: [helm],
+        dependsOn: [release],
         metadata: {
           name: props.name
         }

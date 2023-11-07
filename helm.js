@@ -1,12 +1,23 @@
 const cdk8s = require('cdk8s');
 const fs = require('fs');
 const path = require('path');
-const wingsdk = require('@winglang/sdk');
 const crypto = require('crypto');
+
+function findWorkdir(scope) {
+  if (typeof(scope.workdir) == "string") {
+    return scope.workdir;
+  }
+
+  const parent = scope.node.scope;
+  if (!parent) {
+    throw new Error("cannot determine workdir");
+  }
+  return findWorkdir(parent);
+}
 
 exports.toHelmChart = function(chart) {
   const app = cdk8s.App.of(chart);
-  const wingdir = wingsdk.core.App.of(chart).workdir;
+  const wingdir = findWorkdir(chart);
 
   app.resolvers = [new cdk8s.LazyResolver(), new cdk8s.ImplicitTokenResolver(), new cdk8s.NumberStringUnionResolver()];
   const docs = cdk8s.App._synthChart(chart);
@@ -29,7 +40,8 @@ exports.toHelmChart = function(chart) {
     appVersion: hash,
   };
 
-  fs.writeFileSync(path.join(workdir, "Chart.yaml"), cdk8s.Yaml.stringify(manifest));
+  const chartyaml = path.join(workdir, "Chart.yaml");
+  fs.writeFileSync(chartyaml, cdk8s.Yaml.stringify(manifest));
 
   return path.join("./", ".wing", reldir);
 };
